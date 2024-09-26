@@ -10,6 +10,7 @@ import com.seek.authentication_service.model.Token;
 import com.seek.authentication_service.model.User;
 import com.seek.authentication_service.repository.TokenRepository;
 import com.seek.authentication_service.repository.UserRepository;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Log4j2
 public class AuthenticationService {
 
     private final UserRepository repository;
@@ -41,8 +43,9 @@ public class AuthenticationService {
     }
 
     public UserResponse register(UserRequest request) {
-
+        log.info("** Registering user **");
         if (repository.findByUsername(request.getUsername()).isPresent()) {
+            log.warn("User already exists " + request.getUsername());
             throw new UserAlreadyExistsException("User already exists");
         }
 
@@ -60,11 +63,13 @@ public class AuthenticationService {
         userResponse.setLastName(user.getLastName());
         userResponse.setUsername(user.getUsername());
         userResponse.setRole(user.getRole());
+        log.info("Success create user");
         return userResponse;
 
     }
 
     public TokenResponse authenticate(LoginRequest request) {
+        log.info("Start authenticate user");
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -75,6 +80,7 @@ public class AuthenticationService {
         String jwt = jwtService.generateToken(user);
         revokeAllTokenByUser(user);
         saveUserToken(jwt, user);
+        log.info("End authenticate user");
         return new TokenResponse(jwt);
     }
 
