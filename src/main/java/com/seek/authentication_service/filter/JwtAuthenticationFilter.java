@@ -1,8 +1,8 @@
 package com.seek.authentication_service.filter;
 
 
-import com.seek.authentication_service.service.JwtService;
-import com.seek.authentication_service.service.UserDetailsServiceImp;
+import com.seek.authentication_service.service.impl.JwtServiceImpl;
+import com.seek.authentication_service.service.impl.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,12 +20,12 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final UserDetailsServiceImp userDetailsService;
+    private final JwtServiceImpl jwtServiceImpl;
+    private final UserDetailsServiceImpl userDetailsService;
 
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImp userDetailsService) {
-        this.jwtService = jwtService;
+    public JwtAuthenticationFilter(JwtServiceImpl jwtServiceImpl, UserDetailsServiceImpl userDetailsService) {
+        this.jwtServiceImpl = jwtServiceImpl;
         this.userDetailsService = userDetailsService;
     }
 
@@ -41,10 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String token = authHeader.substring(7);
-        String username = jwtService.extractUsername(token);
+        String username = jwtServiceImpl.extractUsername(token);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isValid(token, userDetails)) {
+            if (jwtServiceImpl.isValid(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );

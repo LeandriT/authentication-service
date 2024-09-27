@@ -11,12 +11,12 @@ public class UserAdminController {
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String> userUri() {
-        return ResponseEntity.ok("Hello from secured url");
+        return ResponseEntity.ok("Hello from secured user url");
     }
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> adminUri() {
-        return ResponseEntity.ok("Hello from admin only url");
+        return ResponseEntity.ok("Hello from secured admin url");
     }
 }

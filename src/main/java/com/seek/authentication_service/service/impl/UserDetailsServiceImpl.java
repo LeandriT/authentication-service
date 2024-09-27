@@ -1,4 +1,4 @@
-package com.seek.authentication_service.service;
+package com.seek.authentication_service.service.impl;
 
 import com.seek.authentication_service.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,11 +7,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserDetailsServiceImp implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository repository;
 
-    public UserDetailsServiceImp(UserRepository repository) {
+    public UserDetailsServiceImpl(UserRepository repository) {
         this.repository = repository;
     }
 
