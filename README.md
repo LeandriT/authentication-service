@@ -62,3 +62,47 @@ Este proyecto incluye un controlador de autenticación que permite registrar usu
   "token": "eyJhbGciOiJIUzI1NiIsInR5..."
 }
 ```
+
+
+## Endpoints
+
+### 1. URL de Login
+
+```bash
+curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/login' \
+--header 'Content-Type: application/json' \
+--data '{
+    "username": "gandhycuasapas2",
+    "password": "securePassword123"
+}'
+```
+### 2. URL de Registro
+```bash
+curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/register' \
+--header 'Content-Type: application/json' \
+--data '{
+"first_name": "John",
+"last_name": "Doe",
+"username": "gandhycuasapas2",
+"password": "securePassword123",
+"role": "USER"
+}'
+```
+
+### 3. URL de Prueba (con Token JWT)
+
+```bash
+curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/user' \
+--header 'Authorization: Bearer ***'
+```
+
+Nota: Reemplaza *** por el token JWT válido que obtuviste durante el proceso de autenticación.
+
+### Roles de Acceso
+- USER
+- ADMIN
+
+El token JWT obtenido tras el login debe ser utilizado en la cabecera Authorization para acceder a los endpoints protegidos:
+
+- /user: Requiere un token con rol USER.
+- /admin: Requiere un token con rol ADMIN.
