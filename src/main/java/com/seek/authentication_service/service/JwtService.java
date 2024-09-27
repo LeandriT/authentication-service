@@ -4,6 +4,8 @@ import com.seek.authentication_service.model.User;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.crypto.SecretKey;
+import java.util.Date;
 import java.util.function.Function;
 
 public interface JwtService {
@@ -15,4 +17,12 @@ public interface JwtService {
     <T> T extractClaim(String token, Function<Claims, T> resolver);
 
     String generateToken(User user);
+
+    Claims extractAllClaims(String token);
+
+    boolean isTokenExpired(String token);
+
+    SecretKey getSigninKey();
+
+    Date extractExpiration(String token);
 }

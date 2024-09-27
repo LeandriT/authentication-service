@@ -4,7 +4,7 @@ import com.seek.authentication_service.dto.request.LoginRequest;
 import com.seek.authentication_service.dto.request.UserRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
 import com.seek.authentication_service.dto.response.UserResponse;
-import com.seek.authentication_service.service.impl.AuthenticationService;
+import com.seek.authentication_service.service.AuthenticationService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

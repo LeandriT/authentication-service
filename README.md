@@ -1,6 +1,7 @@
 # Servicio de Autenticación
 
-Este proyecto incluye un controlador de autenticación que permite registrar usuarios y autenticar su acceso. Utiliza Spring Boot y es parte de un sistema de gestión de autenticación más amplio.
+Este proyecto incluye un controlador de autenticación que permite registrar usuarios y autenticar su acceso. Utiliza Spring Boot y es parte de un
+sistema de gestión de autenticación más amplio.
 
 ## Requisitos Previos
 
@@ -8,12 +9,12 @@ Este proyecto incluye un controlador de autenticación que permite registrar usu
 - **Spring Boot:** Utilizan Spring Boot como framework principal.
 - **Base de Datos:** Se requiere una base de datos compatible con JPA/Hibernate para persistir los datos de usuarios, tokens.
 
-
 # AuthenticationController
 
 ## Descripción
 
-`AuthenticationController` es un controlador REST que maneja las operaciones de autenticación y registro de usuarios. Utiliza los servicios proporcionados por `AuthenticationService` para realizar las acciones correspondientes.
+`AuthenticationController` es un controlador REST que maneja las operaciones de autenticación y registro de usuarios. Utiliza los servicios
+proporcionados por `AuthenticationService` para realizar las acciones correspondientes.
 
 ## Endpoints
 
@@ -30,6 +31,7 @@ Este proyecto incluye un controlador de autenticación que permite registrar usu
     - **Cuerpo de la respuesta:** `UserResponse`, con los detalles del usuario registrado.
 
 #### Ejemplo de Request Body:
+
 ```json
 {
   "username": "usuario1",
@@ -37,32 +39,35 @@ Este proyecto incluye un controlador de autenticación que permite registrar usu
   "email": "usuario1@example.com"
 }
 ```
+
 ### 2. Autenticacion de usuarios
 
 - **URL:** `/login`
 - **Método HTTP:** `POST`
 - **Descripción:** Autentica a un usuario en el sistema.
-- **Request Body:** 
-  - `LoginRequest`: un objeto que contiene las credenciales del usuario (nombre de usuario y contraseña).
-  
+- **Request Body:**
+    - `LoginRequest`: un objeto que contiene las credenciales del usuario (nombre de usuario y contraseña).
+
 - **Respuesta:**
-  - **Código HTTP:** `200 OK` si las credenciales son válidas.
-  - **Cuerpo de la respuesta:** `TokenResponse`, que contiene el token JWT necesario para acceder a recursos protegidos del sistema.
+    - **Código HTTP:** `200 OK` si las credenciales son válidas.
+    - **Cuerpo de la respuesta:** `TokenResponse`, que contiene el token JWT necesario para acceder a recursos protegidos del sistema.
 
 #### Ejemplo de Request Body:
+
 ```json
 {
   "username": "usuario1",
   "password": "password123"
 }
 ```
+
 #### Ejemplo de Respuesta:
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5..."
 }
 ```
-
 
 ## Endpoints
 
@@ -76,7 +81,9 @@ curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/login
     "password": "securePassword123"
 }'
 ```
+
 ### 2. URL de Registro
+
 ```bash
 curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/register' \
 --header 'Content-Type: application/json' \
@@ -99,6 +106,7 @@ curl --location 'https://authentication-service-dbbcfbcb9c78.herokuapp.com/user'
 Nota: Reemplaza *** por el token JWT válido que obtuviste durante el proceso de autenticación.
 
 ### Roles de Acceso
+
 - USER
 - ADMIN
 

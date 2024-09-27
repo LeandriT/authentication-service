@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
 }
@@ -34,4 +35,62 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+    exclude '**/com/seek/AuthenticationServiceApplication/**/*IntegrationTest*'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'CLASS'
+            excludes = ['AuthenticationServiceApplication*']
+            limit {
+                minimum = 0.65
+            }
+            excludes = [
+                    'com.seek.authentication_service.AuthenticationServiceApplication',
+                    'com.seek.authentication_service.dto.**',
+                    'com.seek.authentication_service.mapper.**',
+                    'com.seek.authentication_service.model.**',
+                    'com.seek.authentication_service.repository.**',
+                    'com.seek.authentication_service.config.**',
+                    'com.seek.authentication_service.exceptions.**',
+                    'com.seek.authentication_service.controller.**',
+                    'com.seek.authentication_service.filter.**',
+            ]
+        }
+    }
+
+}
+
+jacocoTestReport {
+    reports {
+        html.destination file('build/jacocoHtml')
+    }
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/com/seek/authentication_service/AuthenticationServiceApplication*',
+                    '**/com/seek/authentication_service/dto/**',
+                    '**/com/seek/authentication_service/mapper/**',
+                    '**/com/seek/authentication_service/model/**',
+                    '**/com/seek/authentication_service/repository/**',
+                    '**/com/seek/authentication_service/config/**',
+                    '**/com/seek/authentication_service/exceptions/**',
+                    '**/com/seek/authentication_service/controller/**',
+                    '**/com/seek/authentication_service/filter/**',
+            ])
+        })
+    }
 }

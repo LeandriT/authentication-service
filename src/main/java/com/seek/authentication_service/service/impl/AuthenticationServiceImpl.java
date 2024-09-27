@@ -10,6 +10,7 @@ import com.seek.authentication_service.model.Token;
 import com.seek.authentication_service.model.User;
 import com.seek.authentication_service.repository.TokenRepository;
 import com.seek.authentication_service.repository.UserRepository;
+import com.seek.authentication_service.service.AuthenticationService;
 import com.seek.authentication_service.service.JwtService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @Service
 @Log4j2
-public class AuthenticationService implements com.seek.authentication_service.service.AuthenticationService {
+public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
@@ -31,11 +32,11 @@ public class AuthenticationService implements com.seek.authentication_service.se
 
     private final AuthenticationManager authenticationManager;
 
-    public AuthenticationService(UserRepository repository,
-                                 PasswordEncoder passwordEncoder,
-                                 JwtService jwtService,
-                                 TokenRepository tokenRepository,
-                                 AuthenticationManager authenticationManager) {
+    public AuthenticationServiceImpl(UserRepository repository,
+                                     PasswordEncoder passwordEncoder,
+                                     JwtService jwtService,
+                                     TokenRepository tokenRepository,
+                                     AuthenticationManager authenticationManager) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
