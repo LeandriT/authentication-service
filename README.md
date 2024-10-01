@@ -1,19 +1,22 @@
 # Servicio de Autenticación
 
-Este proyecto incluye un controlador de autenticación que permite registrar usuarios y autenticar su acceso. Utiliza Spring Boot y es parte de un
+Este proyecto incluye un controlador de autenticación que permite registrar usuarios y autenticar su acceso. Utiliza
+Spring Boot y es parte de un
 sistema de gestión de autenticación más amplio.
 
 ## Requisitos Previos
 
 - **Java:** El microservicio esta desarrollado en Java, por lo que se requiere un entorno de ejecución de Java.
 - **Spring Boot:** Utilizan Spring Boot como framework principal.
-- **Base de Datos:** Se requiere una base de datos compatible con JPA/Hibernate para persistir los datos de usuarios, tokens.
+- **Base de Datos:** Se requiere una base de datos compatible con JPA/Hibernate para persistir los datos de usuarios,
+  tokens.
 
 # AuthenticationController
 
 ## Descripción
 
-`AuthenticationController` es un controlador REST que maneja las operaciones de autenticación y registro de usuarios. Utiliza los servicios
+`AuthenticationController` es un controlador REST que maneja las operaciones de autenticación y registro de usuarios.
+Utiliza los servicios
 proporcionados por `AuthenticationService` para realizar las acciones correspondientes.
 
 ## Endpoints
@@ -50,7 +53,8 @@ proporcionados por `AuthenticationService` para realizar las acciones correspond
 
 - **Respuesta:**
     - **Código HTTP:** `200 OK` si las credenciales son válidas.
-    - **Cuerpo de la respuesta:** `TokenResponse`, que contiene el token JWT necesario para acceder a recursos protegidos del sistema.
+    - **Cuerpo de la respuesta:** `TokenResponse`, que contiene el token JWT necesario para acceder a recursos
+      protegidos del sistema.
 
 #### Ejemplo de Request Body:
 
@@ -110,7 +114,8 @@ Nota: Reemplaza *** por el token JWT válido que obtuviste durante el proceso de
 - USER
 - ADMIN
 
-El token JWT obtenido tras el login debe ser utilizado en la cabecera Authorization para acceder a los endpoints protegidos:
+El token JWT obtenido tras el login debe ser utilizado en la cabecera Authorization para acceder a los endpoints
+protegidos:
 
 - /user: Requiere un token con rol USER.
 - /admin: Requiere un token con rol ADMIN.

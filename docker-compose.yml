@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres-authentication-service
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: authentication-service
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - authentication-service-network
+    restart: always # Asegura que se reinicie si hay algún problema
+
+volumes:
+  postgres_data:
+
+networks:
+  authentication-service-network:
+    driver: bridge

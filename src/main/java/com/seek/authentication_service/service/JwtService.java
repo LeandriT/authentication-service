@@ -2,11 +2,10 @@ package com.seek.authentication_service.service;
 
 import com.seek.authentication_service.model.User;
 import io.jsonwebtoken.Claims;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+import org.springframework.security.core.userdetails.UserDetails;
 
 public interface JwtService {
 

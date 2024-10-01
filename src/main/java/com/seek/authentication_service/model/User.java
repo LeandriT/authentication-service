@@ -1,48 +1,63 @@
 package com.seek.authentication_service.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-
+@Getter
+@Setter
 @Entity
-@Table(name = "users")
-public class User implements UserDetails {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
-
-    @Column(name = "first_name")
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"phone_number"}),
+        @UniqueConstraint(columnNames = {"username"})
+})
+@SQLDelete(sql = "UPDATE users SET is_deleted = true, deleted_at = NOW() WHERE uuid = ?")
+@Where(clause = "is_deleted = false")
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+public class User extends BaseModel implements UserDetails {
+    @NotNull
     private String firstName;
-
-    @Column(name = "last_name")
+    @NotNull
     private String lastName;
-
-    @Column(name = "username")
+    @NotNull
     private String username;
-
-    @Column(name = "password")
+    @NotNull
     private String password;
+    @NotNull
+    private String email;
+    @NotNull
+    private String phoneNumber;
+
+    @NotNull
+    private String city;
+
+    @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
+    private BigDecimal rate;
 
     @Enumerated(value = EnumType.STRING)
     private Role role;
-
-
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -93,27 +108,4 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public List<Token> getTokens() {
-        return tokens;
-    }
-
-    public void setTokens(List<Token> tokens) {
-        this.tokens = tokens;
-    }
 }

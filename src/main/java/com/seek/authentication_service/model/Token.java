@@ -1,34 +1,42 @@
 package com.seek.authentication_service.model;
 
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+
+@Getter
+@Setter
 @Entity
 @Table(name = "tokens")
-public class Token {
+@SQLDelete(sql = "UPDATE tokens SET is_deleted = true, deleted_at = NOW() WHERE uuid = ?")
+@Where(clause = "is_deleted = false")
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Token extends BaseModel {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
 
-    @Column(name = "token")
     private String token;
 
     @Column(name = "is_logged_out")
     private boolean loggedOut;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_uuid")
+    @NotNull
     private User user;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getToken() {
         return token;

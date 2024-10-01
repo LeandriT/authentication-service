@@ -2,64 +2,41 @@ package com.seek.authentication_service.dto.request;
 
 
 import com.seek.authentication_service.model.Role;
-
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserRequest implements Serializable {
+    @NotEmpty(message = "Firstname not be null")
     private String firstName;
+    @NotEmpty(message = "Lastname not be null")
     private String lastName;
+    @NotEmpty(message = "Username not be null")
     private String username;
+    @NotEmpty(message = "Password not be null")
     private String password;
+    @NotEmpty(message = "Role not be null")
     private Role role;
+    @NotEmpty(message = "Email is required")
+    @Email(message = "Email is not valid")
+    private String email;
+    private String phoneNumber;
+    @NotEmpty(message = "City is required")
+    private String city;
+    @NotNull(message = "Rate is required")
+    private BigDecimal rate;
 
-    public UserRequest() {
-    }
 
-    public UserRequest(String firstName, String lastName, String username, String password, Role role) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
 }

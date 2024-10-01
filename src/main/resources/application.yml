@@ -6,10 +6,9 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/authentication-service?useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${DATABASE_USERNAME:root}
-    password: ${DATABASE_PASSWORD:toor}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/authentication-service}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 100
       minimum-idle: 10
@@ -21,7 +20,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: none # Cambia a 'update', 'create', o 'create-drop' según tu necesidad
     properties:
       hibernate:
         format_sql: true
@@ -34,6 +33,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    url: jdbc:postgresql://localhost:5432/authentication-service
+    user: postgres
+    password: postgres
+
 server:
   port: ${PORT:8080}
   error:

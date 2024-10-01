@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final String[] withOutAutUrls = new String[] {"/api/users/v1/**"};//,"/login/**", "/register/**"
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -44,7 +45,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        req -> req.requestMatchers("/login/**", "/register/**")
+                        req -> req.requestMatchers(withOutAutUrls)
                                 .permitAll()
                                 .requestMatchers("/admin").hasAuthority("ADMIN") // Solo usuarios con rol ADMIN
                                 .requestMatchers("/user").hasAuthority("USER")   // Solo usuarios con rol USER

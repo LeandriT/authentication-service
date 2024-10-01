@@ -1,8 +1,11 @@
-
 CREATE TABLE tokens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid UUID PRIMARY KEY,
     token VARCHAR(255) NOT NULL,
     is_logged_out BOOLEAN NOT NULL,
-    user_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+    user_uuid UUID,
+    is_deleted BOOLEAN DEFAULT FALSE, -- Indica si el registro ha sido eliminado (soft delete), por defecto es FALSE
+    deleted_at TIMESTAMP, -- Marca de tiempo de cuándo fue eliminado el registro, puede ser nulo
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Marca de tiempo de cuándo fue creado el registro, por defecto se establece a la hora actual
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Marca de tiempo de cuándo fue actualizado el registro, se actualizará mediante un trigger
+    FOREIGN KEY (user_uuid) REFERENCES users(uuid) -- Agregar la referencia a la tabla users
+);
