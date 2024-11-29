@@ -15,6 +15,7 @@ import com.seek.authentication_service.repository.TokenRepository;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.service.AuthenticationService;
 import com.seek.authentication_service.service.JwtService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
@@ -53,17 +54,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public UserResponse register(UserRequest request) {
         log.info("** Registering user **");
-        if (repository.findByUsername(request.getUsername()).isPresent()) {
-            log.warn("User already exists " + request.getUsername());
-            throw new UserAlreadyExistsException("User already exists");
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("User already exists with email, {}", request.getEmail());
+            throw new UserAlreadyExistsException("User already exists with email");
         }
         if (repository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
-            log.warn("User already exists with phone number " + request.getPhoneNumber());
+            log.warn("User already exists with phone number, {}", request.getPhoneNumber());
             throw new UserAlreadyExistsException("User with phone number already exists");
         }
         String password = passwordEncoder.encode(request.getPassword());
         request.setPassword(password);
+
         User user = userMapper.toModel(request);
+        user.setUsername(this.generateUniqueUsername(user.getFullName()));
         try {
             user = repository.save(user);
         } catch (DataIntegrityViolationException ex) {
@@ -79,8 +82,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("** Updating user **");
         User userFound =
                 repository.findById(uuid).orElseThrow(() -> new UserNotFoundException("User doest not exists"));
-        if (repository.findByUsernameAndUuidNot(request.getUsername(), uuid).isPresent()) {
-            log.warn("User already exists " + request.getUsername());
+        if (repository.findByEmailAndUuidNot(request.getEmail(), uuid).isPresent()) {
+            log.warn("User already exists " + request.getEmail());
             throw new UserAlreadyExistsException("User already exists");
         }
         if (repository.findByPhoneNumberAndUuidNot(request.getPhoneNumber(), uuid).isPresent()) {
@@ -89,9 +92,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         String password = passwordEncoder.encode(request.getPassword());
         userFound.setPassword(password);
-        userFound.setUsername(request.getUsername());
         userFound.setPhoneNumber(request.getPhoneNumber());
-        userFound.setRole(request.getRole());
         userFound.setEmail(request.getEmail());
         try {
             repository.save(userFound);
@@ -106,13 +107,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Start authenticate user");
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword()
                 )
         );
-        String message = String.format("User doest not exists %s", request.getUsername());
+        String message = String.format("User doest not exists %s", request.getEmail());
         User user =
-                repository.findByUsername(request.getUsername()).orElseThrow(() -> new UserNotFoundException(message));
+                repository.findByEmail(request.getEmail()).orElseThrow(() -> new UserNotFoundException(message));
         String jwt = jwtService.generateToken(user);
         revokeAllTokenByUser(user);
         saveUserToken(jwt, user);
@@ -135,5 +136,56 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         token.setLoggedOut(false);
         token.setUser(user);
         tokenRepository.save(token);
+    }
+
+    /**
+     * Genera un nombre de usuario único verificando contra la base de datos.
+     *
+     * @param fullName El nombre completo del usuario.
+     * @return Un nombre de usuario único.
+     */
+    private String generateUniqueUsername(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Full name cannot be null or empty");
+        }
+
+        // Dividir el nombre completo en partes
+        String[] parts = fullName.trim().toLowerCase().split("\\s+");
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Full name must contain at least a first name and a last name");
+        }
+
+        // Construir las variaciones del nombre de usuario
+        List<String> usernameVariants = new ArrayList<>();
+        String lastName = parts[parts.length - 1];
+        String baseUsername = parts[0].charAt(0) + lastName; // Inicial + Apellido
+        usernameVariants.add(baseUsername);
+
+        // Generar combinaciones basadas en nombres intermedios
+        StringBuilder initials = new StringBuilder(parts[0].substring(0, 1));
+        for (int i = 1; i < parts.length - 1; i++) {
+            initials.append(parts[i].charAt(0)); // Agregar inicial del segundo o tercer nombre
+            usernameVariants.add(initials + lastName);
+        }
+
+        // Agregar variación completa del primer nombre
+        usernameVariants.add(parts[0] + lastName);
+
+        String uniqueUsername = null;
+
+        // Intentar encontrar un username único en base a las combinaciones generadas
+        for (String candidate : usernameVariants) {
+            if (!repository.findByUsername(candidate).isPresent()) {
+                uniqueUsername = candidate;
+                break;
+            }
+        }
+
+        // Si todas las combinaciones ya existen, agregar un timestamp como último recurso
+        if (uniqueUsername == null) {
+            uniqueUsername = baseUsername + System.currentTimeMillis();
+        }
+
+        return uniqueUsername;
     }
 }

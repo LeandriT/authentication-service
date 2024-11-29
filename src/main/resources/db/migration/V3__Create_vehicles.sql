@@ -10,6 +10,7 @@ CREATE TABLE vehicles (
     status VARCHAR(20) NOT NULL DEFAULT 'PARQUEADO',
     user_uuid UUID NOT NULL,
     amount_charged NUMERIC(10,2) DEFAULT 0.0,
+    amount_calculated NUMERIC(10,2) DEFAULT 0.0,
     rate NUMERIC(10,2) DEFAULT 0.0,
     is_deleted BOOLEAN DEFAULT FALSE, -- Indica si el registro ha sido eliminado (soft delete)
     deleted_at TIMESTAMP, -- Marca de tiempo de cuándo fue eliminado el registro

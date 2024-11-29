@@ -1,5 +1,7 @@
 package com.seek.authentication_service.service.impl;
 
+import com.seek.authentication_service.dto.request.SearchVehicleRequest;
+import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import com.seek.authentication_service.exceptions.GenericException;
@@ -52,7 +54,7 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public VehicleResponse paid(UUID uuid) {
+    public VehicleResponse paid(UUID uuid, VehiclePaidRequest vehiclePaidRequest) {
         Vehicle vehicle = repository.findById(uuid).orElseThrow(VehicleNotFoundException::new);
 
         if (vehicle.getParkingStatus().equals(ParkingStatus.PAID)) {
@@ -74,10 +76,12 @@ public class VehicleServiceImpl implements VehicleService {
 
         // Calcular el monto a cobrar
         BigDecimal rate = vehicle.getUser().getRate();
-        BigDecimal amountCharged = rate.multiply(BigDecimal.valueOf(hoursCharged));
+        BigDecimal amountCalculated = rate.multiply(BigDecimal.valueOf(hoursCharged));
 
         // Actualizar el vehículo
-        vehicle.setAmountCharged(amountCharged);
+        vehicle.setAmountCalculated(amountCalculated);
+        // cobrado a cliente
+        vehicle.setAmountCharged(vehiclePaidRequest.getAmountCharged());
         vehicle.setParkingStatus(ParkingStatus.PAID);
         vehicle.setRate(rate);
         vehicle = repository.save(vehicle);
@@ -93,11 +97,41 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Page<VehicleResponse> index(Pageable pageable) {
-        return null;
+        return repository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override
     public VehicleResponse show(UUID uuid) {
         return null;
+    }
+
+    @Override
+    public VehicleResponse showByPlate(SearchVehicleRequest searchVehicleRequest) {
+        Vehicle vehicle =
+                repository.findFirstByLicensePlateAndRegistrationDate(searchVehicleRequest.getPlate(), LocalDate.now(),
+                                searchVehicleRequest.getUserUuid())
+                        .orElseThrow(VehicleNotFoundException::new);
+
+        // Calcular el tiempo en minutos
+        long parkedTimeInMinutes = Duration.between(vehicle.getRegistrationDate(), LocalDateTime.now()).toMinutes();
+        vehicle.setParkedTime(parkedTimeInMinutes);
+
+        // Calcular las horas y aplicar la regla de los 15 minutos
+        long hoursCharged = parkedTimeInMinutes / 60; // Horas completas
+        long remainingMinutes = parkedTimeInMinutes % 60; // Minutos restantes
+
+        // Si los minutos restantes son más de 15, cobramos una hora adicional
+        if (remainingMinutes > 15) {
+            hoursCharged += 1; // Cobrar una hora adicional
+        }
+
+        // Calcular el monto a cobrar
+        BigDecimal rate = vehicle.getUser().getRate();
+        BigDecimal amountCharged = rate.multiply(BigDecimal.valueOf(hoursCharged));
+
+        // Actualizar el vehículo
+        vehicle.setAmountCharged(amountCharged);
+        vehicle.setRate(rate);
+        return mapper.toDto(vehicle);
     }
 }

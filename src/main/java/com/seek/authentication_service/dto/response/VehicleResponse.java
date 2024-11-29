@@ -1,6 +1,7 @@
 package com.seek.authentication_service.dto.response;
 
 import com.seek.authentication_service.dto.base.BaseDto;
+import com.seek.authentication_service.model.ParkingStatus;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -24,4 +25,5 @@ public class VehicleResponse extends BaseDto {
     private UUID userUuid;
     private BigDecimal amountCharged;
     private BigDecimal rate;
+    private ParkingStatus parkingStatus;
 }

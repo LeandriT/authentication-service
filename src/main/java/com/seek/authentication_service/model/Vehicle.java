@@ -60,6 +60,9 @@ public class Vehicle extends BaseModel {
     @Column(name = "amount_charged", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal amountCharged;
 
+    @Column(name = "amount_calculated", nullable = false, precision = 10, scale = 2) // Para dinero
+    private BigDecimal amountCalculated;
+
     @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal rate;
 
