@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,19 +36,18 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
-        Optional<Vehicle> vehicleOptional =
-                repository.findFirstByLicensePlateAndRegistrationDate(vehicleRequest.getLicensePlate(), LocalDate.now(),
-                        vehicleRequest.getUserUuid());
-        if (vehicleOptional.isPresent()) {
-            Vehicle vehicle = vehicleOptional.get();
-            log.info("Vehicle already registered with UUID: {}", vehicle.getUuid());
-            throw new GenericException("Vehicle already registered today");
+        boolean exist = repository.existsByPlateAndParkingDateAndUserUuid(
+                vehicleRequest.getPlate(), LocalDate.now(), vehicleRequest.getUserUuid(), ParkingStatus.PARKED
+        );
+        if (exist) {
+            log.info("Vehicle already registered with UUID: {}", vehicleRequest.getPlate());
+            throw new GenericException(String.format("Vehiculo ya registrado, aun no a pagado parqueo placa: %s",
+                    vehicleRequest.getPlate()));
         }
         Vehicle model = mapper.toModel(vehicleRequest);
-        model.setParkingStatus(ParkingStatus.PARKED);
-        model.setRegistrationDate(LocalDateTime.now());
         User user = userRepository.findById(vehicleRequest.getUserUuid()).orElseThrow(UserNotFoundException::new);
         model.setUser(user);
+        model.setRate(user.getRate());
         model = repository.save(model);
         return mapper.toDto(model);
     }
@@ -60,32 +59,11 @@ public class VehicleServiceImpl implements VehicleService {
         if (vehicle.getParkingStatus().equals(ParkingStatus.PAID)) {
             throw new GenericException("Vehicle already paid");
         }
-
-        // Calcular el tiempo en minutos
-        long parkedTimeInMinutes = Duration.between(vehicle.getRegistrationDate(), LocalDateTime.now()).toMinutes();
-        vehicle.setParkedTime(parkedTimeInMinutes);
-
-        // Calcular las horas y aplicar la regla de los 15 minutos
-        long hoursCharged = parkedTimeInMinutes / 60; // Horas completas
-        long remainingMinutes = parkedTimeInMinutes % 60; // Minutos restantes
-
-        // Si los minutos restantes son más de 15, cobramos una hora adicional
-        if (remainingMinutes > 15) {
-            hoursCharged += 1; // Cobrar una hora adicional
-        }
-
-        // Calcular el monto a cobrar
-        BigDecimal rate = vehicle.getUser().getRate();
-        BigDecimal amountCalculated = rate.multiply(BigDecimal.valueOf(hoursCharged));
-
-        // Actualizar el vehículo
-        vehicle.setAmountCalculated(amountCalculated);
-        // cobrado a cliente
-        vehicle.setAmountCharged(vehiclePaidRequest.getAmountCharged());
+        this.calculateParkingStatus(vehicle);
+        vehicle.setAmountCharged(vehicle.getAmountCharged());
         vehicle.setParkingStatus(ParkingStatus.PAID);
-        vehicle.setRate(rate);
+        vehicle.setPaymentDate(LocalDateTime.now());
         vehicle = repository.save(vehicle);
-
         return mapper.toDto(vehicle);
     }
 
@@ -106,32 +84,42 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public VehicleResponse showByPlate(SearchVehicleRequest searchVehicleRequest) {
-        Vehicle vehicle =
-                repository.findFirstByLicensePlateAndRegistrationDate(searchVehicleRequest.getPlate(), LocalDate.now(),
-                                searchVehicleRequest.getUserUuid())
-                        .orElseThrow(VehicleNotFoundException::new);
+    public List<VehicleResponse> showByPlate(SearchVehicleRequest searchVehicleRequest) {
+        List<Vehicle> vehicles = repository.findByPlateAndParkingDateAndParkingStatus(
+                searchVehicleRequest.getPlate(),
+                searchVehicleRequest.getDateToSearch(),
+                searchVehicleRequest.getUserUuid(),
+                ParkingStatus.PARKED
+        );
 
+        // Calcular el estado de estacionamiento para cada vehículo
+        vehicles.forEach(this::calculateParkingStatus);
+
+        // Convertir las entidades a DTO
+        return vehicles.stream().map(mapper::toDto).toList();
+    }
+
+    public void calculateParkingStatus(Vehicle vehicle) {
         // Calcular el tiempo en minutos
-        long parkedTimeInMinutes = Duration.between(vehicle.getRegistrationDate(), LocalDateTime.now()).toMinutes();
+        long parkedTimeInMinutes = Duration.between(vehicle.getParkingDate(), LocalDateTime.now()).toMinutes();
         vehicle.setParkedTime(parkedTimeInMinutes);
 
         // Calcular las horas y aplicar la regla de los 15 minutos
         long hoursCharged = parkedTimeInMinutes / 60; // Horas completas
         long remainingMinutes = parkedTimeInMinutes % 60; // Minutos restantes
 
-        // Si los minutos restantes son más de 15, cobramos una hora adicional
+        // Si los minutos restantes son más de 15, cobrar una hora adicional
         if (remainingMinutes > 15) {
             hoursCharged += 1; // Cobrar una hora adicional
         }
 
         // Calcular el monto a cobrar
         BigDecimal rate = vehicle.getUser().getRate();
-        BigDecimal amountCharged = rate.multiply(BigDecimal.valueOf(hoursCharged));
+        BigDecimal amountCalculated = rate.multiply(BigDecimal.valueOf(hoursCharged));
 
         // Actualizar el vehículo
-        vehicle.setAmountCharged(amountCharged);
+        vehicle.setAmountCalculated(amountCalculated);
         vehicle.setRate(rate);
-        return mapper.toDto(vehicle);
     }
+
 }

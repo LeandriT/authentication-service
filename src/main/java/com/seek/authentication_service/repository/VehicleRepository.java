@@ -1,8 +1,9 @@
 package com.seek.authentication_service.repository;
 
+import com.seek.authentication_service.model.ParkingStatus;
 import com.seek.authentication_service.model.Vehicle;
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,14 +12,30 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
-    @Query("SELECT v FROM Vehicle v WHERE v.licensePlate = :licensePlate " +
-            "AND DATE(v.registrationDate) = :registrationDate " +
+    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END " +
+            "FROM Vehicle v " +
+            "WHERE v.plate = :plate " +
+            "AND DATE(v.parkingDate) = :parkingDate " +
+            "AND v.parkingStatus = :parkingStatus " +
+            "AND v.user.uuid = :userUuid")
+    boolean existsByPlateAndParkingDateAndUserUuid(
+            @Param("plate") String plate,
+            @Param("parkingDate") LocalDate parkingDate,
+            @Param("userUuid") UUID userUuid,
+            @Param("parkingStatus") ParkingStatus parkingStatus
+    );
+
+    @Query("SELECT v FROM Vehicle v " +
+            "WHERE v.plate = :plate " +
+            "AND DATE(v.parkingDate) = :parkingDate " +
             "AND v.user.uuid = :userUuid " +
-            "ORDER BY v.registrationDate ASC")
-    Optional<Vehicle> findFirstByLicensePlateAndRegistrationDate(
-            @Param("licensePlate") String licensePlate,
-            @Param("registrationDate") LocalDate registrationDate,
-            @Param("userUuid") UUID userUuid
+            "AND v.parkingStatus = :parkingStatus " +
+            "ORDER BY v.parkingDate ASC")
+    List<Vehicle> findByPlateAndParkingDateAndParkingStatus(
+            @Param("plate") String plate,
+            @Param("parkingDate") LocalDate parkingDate,
+            @Param("userUuid") UUID userUuid,
+            @Param("parkingStatus") ParkingStatus parkingStatus
     );
 
 }

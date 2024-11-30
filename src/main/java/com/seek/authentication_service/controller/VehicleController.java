@@ -5,6 +5,8 @@ import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import com.seek.authentication_service.service.VehicleService;
+import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,12 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/vehicle")
 @RequiredArgsConstructor
+@Validated
 public class VehicleController {
     private final VehicleService vehicleService;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<VehicleResponse> create(@RequestBody VehicleRequest request) {
+    public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
         return new ResponseEntity<>(vehicleService.create(request), HttpStatus.CREATED);
     }
 
@@ -39,7 +43,7 @@ public class VehicleController {
 
     @PostMapping("/search-vehicle")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<VehicleResponse> showByPlate(@RequestBody SearchVehicleRequest searchVehicleRequest) {
+    public ResponseEntity<List<VehicleResponse>> showByPlate(@RequestBody SearchVehicleRequest searchVehicleRequest) {
         return new ResponseEntity<>(vehicleService.showByPlate(searchVehicleRequest), HttpStatus.OK);
     }
 

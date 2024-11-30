@@ -1,8 +1,10 @@
 package com.seek.authentication_service.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.seek.authentication_service.dto.base.BaseDto;
 import com.seek.authentication_service.model.ParkingStatus;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VehicleResponse extends BaseDto {
-    private String licensePlate;
+    private String plate;
     private String dni;
     private String fullName;
     private String phoneNumber;
@@ -26,4 +28,8 @@ public class VehicleResponse extends BaseDto {
     private BigDecimal amountCharged;
     private BigDecimal rate;
     private ParkingStatus parkingStatus;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime parkingDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime paymentDate;
 }

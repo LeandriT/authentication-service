@@ -1,5 +1,7 @@
 package com.seek.authentication_service.dto.request;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,11 +15,14 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VehicleRequest {
-    private String licensePlate;
+    @NotEmpty(message = "placa requerida")
+    private String plate;
     private String dni;
     private String fullName;
+    @NotEmpty(message = "numero celular requerido")
     private String phoneNumber;
     private String secondaryPhoneNumber;
     private Long parkedTime;
+    @NotNull(message = "El UUID del usuario no puede ser nulo")
     private UUID userUuid;
 }

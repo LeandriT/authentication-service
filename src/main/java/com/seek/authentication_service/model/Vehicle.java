@@ -31,8 +31,8 @@ import org.hibernate.annotations.Where;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Vehicle extends BaseModel {
-    @Column(name = "license_plate", nullable = false, unique = true)
-    private String licensePlate;
+    @Column(name = "plate", nullable = false, unique = true)
+    private String plate;
 
     @Column(name = "dni")
     private String dni; // Identificación del usuario
@@ -45,23 +45,26 @@ public class Vehicle extends BaseModel {
 
     @Column(name = "secondary_phone_number")
     private String secondaryPhoneNumber; // Segundo teléfono opcional
+    @Builder.Default()
+    @Column(name = "parking_date", updatable = false)
+    private LocalDateTime parkingDate = LocalDateTime.now();
 
-    @Column(name = "registration_date", updatable = false)
-    private LocalDateTime registrationDate;
+    @Column(name = "paymentDate", updatable = false)
+    private LocalDateTime paymentDate;
 
     @Builder.Default()
     @Column(name = "parked_time")
     private Long parkedTime = 0L; // Almacena el tiempo en milisegundos
-
+    @Builder.Default()
     @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)
-    private ParkingStatus parkingStatus; // Valor por defecto
-
+    private ParkingStatus parkingStatus = ParkingStatus.PARKED; // Valor por defecto
+    @Builder.Default()
     @Column(name = "amount_charged", nullable = false, precision = 10, scale = 2) // Para dinero
-    private BigDecimal amountCharged;
-
+    private BigDecimal amountCharged = BigDecimal.ZERO;
+    @Builder.Default()
     @Column(name = "amount_calculated", nullable = false, precision = 10, scale = 2) // Para dinero
-    private BigDecimal amountCalculated;
+    private BigDecimal amountCalculated = BigDecimal.ZERO;
 
     @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal rate;
@@ -73,7 +76,7 @@ public class Vehicle extends BaseModel {
 
     @PrePersist
     protected void onCreate() {
-        this.registrationDate = LocalDateTime.now(); // Establece la fecha de registro al crear
+        this.parkingDate = LocalDateTime.now(); // Establece la fecha de registro al crear
     }
 
 }

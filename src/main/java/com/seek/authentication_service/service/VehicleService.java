@@ -4,6 +4,7 @@ import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
 import com.seek.authentication_service.dto.response.VehicleResponse;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,5 +21,5 @@ public interface VehicleService {
 
     VehicleResponse show(UUID uuid);
 
-    VehicleResponse showByPlate(SearchVehicleRequest searchVehicleRequest);
+    List<VehicleResponse> showByPlate(SearchVehicleRequest searchVehicleRequest);
 }

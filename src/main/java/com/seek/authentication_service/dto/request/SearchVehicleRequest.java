@@ -1,5 +1,6 @@
 package com.seek.authentication_service.dto.request;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,4 +16,5 @@ import lombok.Setter;
 public class SearchVehicleRequest {
     private String plate;
     private UUID userUuid;
+    private LocalDate dateToSearch;
 }

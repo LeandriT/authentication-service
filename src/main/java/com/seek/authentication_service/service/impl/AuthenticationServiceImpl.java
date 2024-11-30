@@ -21,7 +21,9 @@ import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -105,15 +107,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public TokenResponse authenticate(LoginRequest request) {
         log.info("Start authenticate user");
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (AuthenticationException ex) {
+            log.error("Authentication failed for user: {}", request.getEmail(), ex);
+            throw new BadCredentialsException("Invalid credentials");
+        }
         String message = String.format("User doest not exists %s", request.getEmail());
         User user =
-                repository.findByEmail(request.getEmail()).orElseThrow(() -> new UserNotFoundException(message));
+                repository.findByEmailOrUsernameOrPhoneNumber(request.getEmail())
+                        .orElseThrow(() -> new UserNotFoundException(message));
         String jwt = jwtService.generateToken(user);
         revokeAllTokenByUser(user);
         saveUserToken(jwt, user);
