@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -30,6 +31,7 @@ import org.hibernate.annotations.Where;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(of = "plate")
 public class Vehicle extends BaseModel {
     @Column(name = "plate", nullable = false, unique = true)
     private String plate;
@@ -49,7 +51,7 @@ public class Vehicle extends BaseModel {
     @Column(name = "parking_date", updatable = false)
     private LocalDateTime parkingDate = LocalDateTime.now();
 
-    @Column(name = "paymentDate", updatable = false)
+    @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
     @Builder.Default()

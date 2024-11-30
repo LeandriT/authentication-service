@@ -60,7 +60,7 @@ public class VehicleServiceImpl implements VehicleService {
             throw new GenericException("Vehicle already paid");
         }
         this.calculateParkingStatus(vehicle);
-        vehicle.setAmountCharged(vehicle.getAmountCharged());
+        vehicle.setAmountCharged(vehiclePaidRequest.getAmountCharged());
         vehicle.setParkingStatus(ParkingStatus.PAID);
         vehicle.setPaymentDate(LocalDateTime.now());
         vehicle = repository.save(vehicle);
