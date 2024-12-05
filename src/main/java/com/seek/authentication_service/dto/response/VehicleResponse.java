@@ -2,7 +2,7 @@ package com.seek.authentication_service.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.seek.authentication_service.dto.base.BaseDto;
-import com.seek.authentication_service.model.ParkingStatus;
+import com.seek.authentication_service.model.enums.ParkingStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;

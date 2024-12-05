@@ -8,9 +8,9 @@ import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.exceptions.VehicleNotFoundException;
 import com.seek.authentication_service.mapper.VehicleMapper;
-import com.seek.authentication_service.model.ParkingStatus;
 import com.seek.authentication_service.model.User;
 import com.seek.authentication_service.model.Vehicle;
+import com.seek.authentication_service.model.enums.ParkingStatus;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.repository.VehicleRepository;
 import com.seek.authentication_service.service.VehicleService;
@@ -36,12 +36,15 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
-        boolean exist = repository.existsByPlateAndParkingDateAndUserUuid(
-                vehicleRequest.getPlate(), LocalDate.now(), vehicleRequest.getUserUuid(), ParkingStatus.PARKED
-        );
+        boolean exist = repository.existsByPlateAndParkingDateAndUserUuid(vehicleRequest.getPlate(), LocalDate.now(),
+                vehicleRequest.getUserUuid(), ParkingStatus.PARKED);
         if (exist) {
             log.info("Vehicle already registered with UUID: {}", vehicleRequest.getPlate());
-            throw new GenericException(String.format("Vehiculo ya registrado, aun no a pagado parqueo placa: %s",
+            List<Vehicle> vehicleRegistered =
+                    repository.findByPlateAndParkingDateAndParkingStatus(vehicleRequest.getPlate(), LocalDate.now(),
+                            vehicleRequest.getUserUuid(), ParkingStatus.PARKED);
+            vehicleRegistered.forEach(this::calculateParkingStatus);
+            throw new GenericException(String.format("Vehiculo ya registrado, aun no a pagado parqueo placa: %s.",
                     vehicleRequest.getPlate()));
         }
         Vehicle model = mapper.toModel(vehicleRequest);
@@ -57,7 +60,8 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = repository.findById(uuid).orElseThrow(VehicleNotFoundException::new);
 
         if (vehicle.getParkingStatus().equals(ParkingStatus.PAID)) {
-            throw new GenericException("Vehicle already paid");
+            final String message = String.format("El Vehiculo ya ha sido pagado, %s", vehicle.getPlate());
+            throw new GenericException(message);
         }
         this.calculateParkingStatus(vehicle);
         vehicle.setAmountCharged(vehiclePaidRequest.getAmountCharged());
@@ -85,12 +89,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public List<VehicleResponse> showByPlate(SearchVehicleRequest searchVehicleRequest) {
-        List<Vehicle> vehicles = repository.findByPlateAndParkingDateAndParkingStatus(
-                searchVehicleRequest.getPlate(),
-                searchVehicleRequest.getDateToSearch(),
-                searchVehicleRequest.getUserUuid(),
-                ParkingStatus.PARKED
-        );
+        List<Vehicle> vehicles = repository.findByPlateAndParkingDateAndParkingStatus(searchVehicleRequest.getPlate(),
+                searchVehicleRequest.getDateToSearch(), searchVehicleRequest.getUserUuid(), ParkingStatus.PARKED);
 
         // Calcular el estado de estacionamiento para cada vehículo
         vehicles.forEach(this::calculateParkingStatus);

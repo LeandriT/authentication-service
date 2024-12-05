@@ -1,10 +1,14 @@
 package com.seek.authentication_service.model;
 
+import com.seek.authentication_service.model.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"phone_number"}),
+        @UniqueConstraint(columnNames = {"email"}),
         @UniqueConstraint(columnNames = {"username"})
 })
 @SQLDelete(sql = "UPDATE users SET is_deleted = true, deleted_at = NOW() WHERE uuid = ?")
@@ -55,6 +60,9 @@ public class User extends BaseModel implements UserDetails {
     @NotNull
     private String city;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "location_uuid", referencedColumnName = "uuid", nullable = false)
+    private Location location;
 
     @Enumerated(value = EnumType.STRING)
     private Role role;

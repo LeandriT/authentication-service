@@ -1,0 +1,18 @@
+CREATE TABLE users (
+    uuid UUID PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(255) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    birth_day TIMESTAMP NOT NULL,
+    rate NUMERIC(10, 2) NOT NULL,
+    role VARCHAR(10) CHECK (role IN ('USER', 'ADMIN')) NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    location_uuid UUID, -- Nueva columna para relacionar con locations
+    CONSTRAINT fk_users_locations FOREIGN KEY (location_uuid) REFERENCES locations (uuid)
+);

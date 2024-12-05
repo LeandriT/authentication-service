@@ -1,7 +1,7 @@
 package com.seek.authentication_service.dto.response;
 
 import com.seek.authentication_service.dto.base.BaseDto;
-import com.seek.authentication_service.model.Role;
+import com.seek.authentication_service.model.enums.Role;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -23,4 +23,5 @@ public class UserResponse extends BaseDto {
     private Role role;
     private String city;
     private BigDecimal rate;
+    private LocationResponse location;
 }

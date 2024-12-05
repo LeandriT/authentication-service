@@ -24,7 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final String[] withOutAutUrls = new String[] {"/api/users/v1/**"};//,"/login/**", "/register/**"
+    private final String[] withOutAutUrls = new String[] {"/api/users/v1/**", "/api/locations/v1"};//,"/login/**", "/register/**"
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;

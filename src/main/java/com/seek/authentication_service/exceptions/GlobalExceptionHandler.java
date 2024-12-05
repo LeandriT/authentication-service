@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +41,20 @@ public class GlobalExceptionHandler {
         ErrorMessage errorResponse = new ErrorMessage();
         errorResponse.setMessage(ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.PRECONDITION_FAILED); // Cambiar a 409 Conflict
+    }
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<ErrorMessage> handleLocationNotFoundException(LocationNotFoundException ex) {
+        ErrorMessage errorResponse = new ErrorMessage();
+        errorResponse.setMessage(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.PRECONDITION_FAILED); // Cambiar a 409 Conflict
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorMessage> handleBadCredentialsException(BadCredentialsException ex) {
+        ErrorMessage errorResponse = new ErrorMessage();
+        errorResponse.setMessage(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); // Cambiar a 409 Conflict
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

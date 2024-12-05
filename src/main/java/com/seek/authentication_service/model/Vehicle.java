@@ -1,5 +1,6 @@
 package com.seek.authentication_service.model;
 
+import com.seek.authentication_service.model.enums.ParkingStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,24 +1,27 @@
 package com.seek.authentication_service.dto.request;
 
 
-import com.seek.authentication_service.model.Role;
+import com.seek.authentication_service.model.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(of = "email")
 public class UserRequest implements Serializable {
     @NotEmpty(message = "Firstname not be null")
     private String fullName;
@@ -38,6 +41,9 @@ public class UserRequest implements Serializable {
     private String city = "QUITO";
     @NotNull(message = "Rate is required")
     private BigDecimal rate;
+
+    @NotEmpty(message = "location no puede ser vacio")
+    private UUID locationUuid;
 
 
 }

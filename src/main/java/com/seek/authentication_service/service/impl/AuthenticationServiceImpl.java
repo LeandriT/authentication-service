@@ -6,11 +6,14 @@ import com.seek.authentication_service.dto.request.UserRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
 import com.seek.authentication_service.dto.response.UserResponse;
 import com.seek.authentication_service.exceptions.GenericException;
+import com.seek.authentication_service.exceptions.LocationNotFoundException;
 import com.seek.authentication_service.exceptions.UserAlreadyExistsException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.mapper.UserMapper;
+import com.seek.authentication_service.model.Location;
 import com.seek.authentication_service.model.Token;
 import com.seek.authentication_service.model.User;
+import com.seek.authentication_service.repository.LocationRepository;
 import com.seek.authentication_service.repository.TokenRepository;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.service.AuthenticationService;
@@ -32,6 +35,7 @@ import org.springframework.stereotype.Service;
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository repository;
+    private final LocationRepository locationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -45,29 +49,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      JwtService jwtService,
                                      TokenRepository tokenRepository,
                                      AuthenticationManager authenticationManager,
-                                     UserMapper userMapper) {
+                                     UserMapper userMapper,
+                                     LocationRepository locationRepository) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.tokenRepository = tokenRepository;
         this.authenticationManager = authenticationManager;
         this.userMapper = userMapper;
+        this.locationRepository = locationRepository;
     }
 
     public UserResponse register(UserRequest request) {
         log.info("** Registering user **");
         if (repository.findByEmail(request.getEmail()).isPresent()) {
-            log.warn("User already exists with email, {}", request.getEmail());
-            throw new UserAlreadyExistsException("User already exists with email");
+            final String message = String.format("Usuario ya registrado con el email, %s.", request.getEmail());
+            log.warn(message);
+            throw new UserAlreadyExistsException(message);
         }
         if (repository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
-            log.warn("User already exists with phone number, {}", request.getPhoneNumber());
-            throw new UserAlreadyExistsException("User with phone number already exists");
+            final String message =
+                    String.format("Usuario ya registrado con el numero de telefono, %s.", request.getPhoneNumber());
+            log.warn(message);
+            throw new UserAlreadyExistsException(message);
         }
         String password = passwordEncoder.encode(request.getPassword());
         request.setPassword(password);
 
         User user = userMapper.toModel(request);
+        Location location = locationRepository.findById(request.getLocationUuid())
+                .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
+        user.setLocation(location);
         user.setUsername(this.generateUniqueUsername(user.getFullName()));
         try {
             user = repository.save(user);
@@ -85,12 +97,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User userFound =
                 repository.findById(uuid).orElseThrow(() -> new UserNotFoundException("User doest not exists"));
         if (repository.findByEmailAndUuidNot(request.getEmail(), uuid).isPresent()) {
-            log.warn("User already exists " + request.getEmail());
-            throw new UserAlreadyExistsException("User already exists");
+            final String message = String.format("Usuario ya existente con email, %s.", request.getEmail());
+            log.warn(message);
+            throw new UserAlreadyExistsException(message);
         }
         if (repository.findByPhoneNumberAndUuidNot(request.getPhoneNumber(), uuid).isPresent()) {
-            log.warn("User already exists with phone number " + request.getPhoneNumber());
-            throw new UserAlreadyExistsException("User with phone number already exists");
+            final String message = String.format("Usuario ya existente con nro telefono, %s", request.getPhoneNumber());
+            log.warn(message);
+            throw new UserAlreadyExistsException(message);
         }
         String password = passwordEncoder.encode(request.getPassword());
         userFound.setPassword(password);
@@ -116,9 +130,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             );
         } catch (AuthenticationException ex) {
             log.error("Authentication failed for user: {}", request.getEmail(), ex);
-            throw new BadCredentialsException("Invalid credentials");
+            final String message = "Credenciales incorrectas";
+            throw new BadCredentialsException(message);
         }
-        String message = String.format("User doest not exists %s", request.getEmail());
+        String message = String.format("Usuario no existe, %s.", request.getEmail());
         User user =
                 repository.findByEmailOrUsernameOrPhoneNumber(request.getEmail())
                         .orElseThrow(() -> new UserNotFoundException(message));

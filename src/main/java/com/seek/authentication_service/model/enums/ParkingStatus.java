@@ -1,4 +1,4 @@
-package com.seek.authentication_service.model;
+package com.seek.authentication_service.model.enums;
 
 public enum ParkingStatus {
     PARKED("ESTACIONADO"),
