@@ -1,7 +1,7 @@
 package com.seek.authentication_service.repository;
 
-import com.seek.authentication_service.model.enums.ParkingStatus;
 import com.seek.authentication_service.model.Vehicle;
+import com.seek.authentication_service.model.enums.ParkingStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;

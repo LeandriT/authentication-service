@@ -18,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 public class UserResponse extends BaseDto {
     private String fullName;
     private String email;
+    private String username;
     private String phoneNumber;
     private LocalDate birthDay;
     private Role role;

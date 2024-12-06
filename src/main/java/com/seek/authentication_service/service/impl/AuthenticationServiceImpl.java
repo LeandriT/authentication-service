@@ -20,6 +20,7 @@ import com.seek.authentication_service.service.AuthenticationService;
 import com.seek.authentication_service.service.JwtService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,13 +64,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public UserResponse register(UserRequest request) {
         log.info("** Registering user **");
         if (repository.findByEmail(request.getEmail()).isPresent()) {
-            final String message = String.format("Usuario ya registrado con el email, %s.", request.getEmail());
+            final String message = String.format("Usuario ya ha sido registrado con el email: %s.", request.getEmail());
             log.warn(message);
             throw new UserAlreadyExistsException(message);
         }
         if (repository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
             final String message =
-                    String.format("Usuario ya registrado con el numero de telefono, %s.", request.getPhoneNumber());
+                    String.format("Usuario ya ha sido registrado con el número de telefono: %s.",
+                            request.getPhoneNumber());
             log.warn(message);
             throw new UserAlreadyExistsException(message);
         }
@@ -80,6 +82,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Location location = locationRepository.findById(request.getLocationUuid())
                 .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
         user.setLocation(location);
+        this.assignCity(user);
+        user.setCity(location.getParentLocation().getName());
         user.setUsername(this.generateUniqueUsername(user.getFullName()));
         try {
             user = repository.save(user);
@@ -162,7 +166,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     /**
-     * Genera un nombre de usuario único verificando contra la base de datos.
+     * Genera un nombre de usuario único basado en el nombre completo.
      *
      * @param fullName El nombre completo del usuario.
      * @return Un nombre de usuario único.
@@ -178,25 +182,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new IllegalArgumentException("Full name must contain at least a first name and a last name");
         }
 
-        // Construir las variaciones del nombre de usuario
-        List<String> usernameVariants = new ArrayList<>();
-        String lastName = parts[parts.length - 1];
-        String baseUsername = parts[0].charAt(0) + lastName; // Inicial + Apellido
-        usernameVariants.add(baseUsername);
+        // Identificar el primer nombre, segundo nombre (si existe) y primer apellido
+        String firstName = parts[0];
+        String secondName = parts.length >= 3 ? parts[1] : "";
+        String lastName = parts[parts.length >= 4 ? 2 : 1];
 
-        // Generar combinaciones basadas en nombres intermedios
-        StringBuilder initials = new StringBuilder(parts[0].substring(0, 1));
-        for (int i = 1; i < parts.length - 1; i++) {
-            initials.append(parts[i].charAt(0)); // Agregar inicial del segundo o tercer nombre
-            usernameVariants.add(initials + lastName);
+        // Lista para almacenar variaciones del nombre de usuario
+        List<String> usernameVariants = new ArrayList<>();
+
+        // Generar combinaciones de usuario
+        if (!secondName.isEmpty()) {
+            for (int i = 1; i <= secondName.length(); i++) {
+                String secondNameSubstring = secondName.substring(0, i);
+                usernameVariants.add(firstName.charAt(0) + secondNameSubstring +
+                        lastName); // Ejemplo: glcuasapas, galcuasapas, ganlcuasapas
+            }
+        }
+        for (int i = 2; i <= firstName.length(); i++) {
+            String firstNameSubstring = firstName.substring(0, i);
+            usernameVariants.add(firstNameSubstring + lastName); // Ejemplo: gancuasapas, gandcuasapas
         }
 
-        // Agregar variación completa del primer nombre
-        usernameVariants.add(parts[0] + lastName);
+        // Agregar las variantes base
+        usernameVariants.add(firstName.charAt(0) + lastName); // Ejemplo: gcuasapas
 
+        // Intentar encontrar un nombre de usuario único basado en las combinaciones generadas
         String uniqueUsername = null;
-
-        // Intentar encontrar un username único en base a las combinaciones generadas
         for (String candidate : usernameVariants) {
             if (!repository.findByUsername(candidate).isPresent()) {
                 uniqueUsername = candidate;
@@ -204,11 +215,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
         }
 
-        // Si todas las combinaciones ya existen, agregar un timestamp como último recurso
+        // Si todas las combinaciones ya existen, agregar un número al final
         if (uniqueUsername == null) {
-            uniqueUsername = baseUsername + System.currentTimeMillis();
+            uniqueUsername = addSuffixUntilUnique(firstName.charAt(0) + lastName);
         }
 
         return uniqueUsername;
+    }
+
+    /**
+     * Agrega un número al final del nombre de usuario hasta que sea único.
+     *
+     * @param baseUsername El nombre de usuario base.
+     * @return Un nombre de usuario único.
+     */
+    private String addSuffixUntilUnique(String baseUsername) {
+        int suffix = 1;
+        String uniqueUsername;
+        do {
+            uniqueUsername = baseUsername + String.format("%02d", suffix); // Ejemplo: gcuasapas01, gcuasapas02
+            suffix++;
+        } while (repository.findByUsername(uniqueUsername).isPresent());
+        return uniqueUsername;
+    }
+
+    private void assignCity(User user) {
+        Location location = user.getLocation();
+        if (Objects.nonNull(location.getParentLocation())) {
+            user.setCity(location.getParentLocation().getName());
+        }
     }
 }

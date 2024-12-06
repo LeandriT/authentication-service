@@ -15,5 +15,6 @@ public class LocationResponse {
     private String code;        // Código único de la localidad
     private String parentCode;  // Código del nivel superior, puede ser NULL
     private String name;        // Nombre de la localidad
+    private String parentName;        // Nombre de la localidad
     private Status status;      // Estado (ACTIVO, INACTIVO)
 }
