@@ -315,7 +315,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     String generateTemporaryPassword() {
         // Longitud deseada de la contraseña
-        final int passwordLength = 20;
+        final int passwordLength = 10;
 
         // Conjunto de caracteres permitidos (mayúsculas, minúsculas, números)
         final String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
