@@ -1,5 +1,7 @@
 package com.seek.authentication_service.service.impl;
 
+import com.seek.authentication_service.client.VehicleSearchService;
+import com.seek.authentication_service.client.dto.VehicleInfoDto;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
@@ -19,6 +21,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -33,6 +36,7 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository repository;
     private final UserRepository userRepository;
     private final VehicleMapper mapper;
+    private final VehicleSearchService vehicleSearchService;
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
@@ -48,6 +52,7 @@ public class VehicleServiceImpl implements VehicleService {
                     vehicleRequest.getPlate()));
         }
         Vehicle model = mapper.toModel(vehicleRequest);
+        this.assignExtraInfoVehicle(vehicleRequest.getPlate(), model);
         User user = userRepository.findById(vehicleRequest.getUserUuid()).orElseThrow(UserNotFoundException::new);
         model.setUser(user);
         model.setRate(user.getRate());
@@ -79,6 +84,7 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Page<VehicleResponse> index(Pageable pageable) {
+        repository.findAll(pageable).forEach(this::calculateParkingStatus);
         return repository.findAll(pageable).map(mapper::toDto);
     }
 
@@ -120,6 +126,16 @@ public class VehicleServiceImpl implements VehicleService {
         // Actualizar el vehículo
         vehicle.setAmountCalculated(amountCalculated);
         vehicle.setRate(rate);
+    }
+
+    void assignExtraInfoVehicle(String plate, Vehicle vehicle) {
+        if (Objects.nonNull(plate) && !plate.isEmpty()) {
+            VehicleInfoDto vehicleInfoDto = vehicleSearchService.searchVehicle(plate.replace("-", ""));
+            vehicle.setBrand(vehicleInfoDto.getMarca());
+            vehicle.setModel(vehicleInfoDto.getModelo());
+            vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
+            vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
+        }
     }
 
 }

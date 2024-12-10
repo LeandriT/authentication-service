@@ -5,7 +5,7 @@ CREATE TABLE users (
     phone_number VARCHAR(255) UNIQUE,
     password VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
-    birth_day TIMESTAMP NOT NULL,
+    birth_day DATE NOT NULL,
     rate NUMERIC(10, 2) NOT NULL,
     role VARCHAR(10) CHECK (role IN ('USER', 'ADMIN')) NOT NULL,
     username VARCHAR(100) NOT NULL,

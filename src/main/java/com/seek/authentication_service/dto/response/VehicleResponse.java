@@ -26,10 +26,15 @@ public class VehicleResponse extends BaseDto {
     private Long parkedTime;
     private UUID userUuid;
     private BigDecimal amountCharged;
+    private BigDecimal amountCalculated;
     private BigDecimal rate;
     private ParkingStatus parkingStatus;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime parkingDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime paymentDate;
+    private String brand;
+    private String model;
+    private String modelYear;
+    private String manufacturingCountry;
 }

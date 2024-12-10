@@ -13,6 +13,12 @@ CREATE TABLE vehicles (
     amount_charged NUMERIC(10,2) DEFAULT 0.0,
     amount_calculated NUMERIC(10,2) DEFAULT 0.0,
     rate NUMERIC(10,2) DEFAULT 0.0,
+    --EXTRA INFO
+    brand VARCHAR(100),
+    model VARCHAR(100),
+    model_year varchar(4),
+    manufacturing_country varchar(100),
+    --EXTRA INFO
     is_deleted BOOLEAN DEFAULT FALSE, -- Indica si el registro ha sido eliminado (soft delete)
     deleted_at TIMESTAMP, -- Marca de tiempo de cuándo fue eliminado el registro
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Marca de tiempo de creación

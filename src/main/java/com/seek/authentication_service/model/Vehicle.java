@@ -72,6 +72,16 @@ public class Vehicle extends BaseModel {
     @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal rate;
 
+    @Column(name = "brand")
+    private String brand;
+    @Column(name = "model")
+    private String model;
+    @Column(name = "model_year")
+    private String modelYear;
+    @Column(name = "manufacturing_country")
+    private String manufacturingCountry;
+
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_uuid")
     @NotNull

@@ -3,7 +3,9 @@ package com.seek.authentication_service.service.impl;
 
 import com.seek.authentication_service.dto.request.LoginRequest;
 import com.seek.authentication_service.dto.request.UserRequest;
+import com.seek.authentication_service.dto.request.UserUpdateRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
+import com.seek.authentication_service.dto.response.UserPasswordResponse;
 import com.seek.authentication_service.dto.response.UserResponse;
 import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.exceptions.LocationNotFoundException;
@@ -17,7 +19,10 @@ import com.seek.authentication_service.repository.LocationRepository;
 import com.seek.authentication_service.repository.TokenRepository;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.service.AuthenticationService;
+import com.seek.authentication_service.service.EmailService;
 import com.seek.authentication_service.service.JwtService;
+import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
+    private final EmailService emailService;
 
     public AuthenticationServiceImpl(UserRepository repository,
                                      PasswordEncoder passwordEncoder,
@@ -51,7 +57,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      TokenRepository tokenRepository,
                                      AuthenticationManager authenticationManager,
                                      UserMapper userMapper,
-                                     LocationRepository locationRepository) {
+                                     LocationRepository locationRepository,
+                                     EmailService emailService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -59,6 +66,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.authenticationManager = authenticationManager;
         this.userMapper = userMapper;
         this.locationRepository = locationRepository;
+        this.emailService = emailService;
     }
 
     public UserResponse register(UserRequest request) {
@@ -96,8 +104,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return userMapper.toDto(user);
     }
 
-    public UserResponse update(UUID uuid, UserRequest request) {
-        log.info("** Updating user **");
+    public UserResponse update(UUID uuid, UserUpdateRequest request) {
+        log.info("** Updating user {} **", request.getFullName());
         User userFound =
                 repository.findById(uuid).orElseThrow(() -> new UserNotFoundException("User doest not exists"));
         if (repository.findByEmailAndUuidNot(request.getEmail(), uuid).isPresent()) {
@@ -111,15 +119,74 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new UserAlreadyExistsException(message);
         }
         String password = passwordEncoder.encode(request.getPassword());
-        userFound.setPassword(password);
+
+        userFound.setFullName(request.getFullName());
         userFound.setPhoneNumber(request.getPhoneNumber());
         userFound.setEmail(request.getEmail());
+        userFound.setRate(request.getRate());
+        userFound.setBirthDay(request.getBirthDay());
+        userFound.setPassword(password);
+        Location location = locationRepository.findById(request.getLocationUuid())
+                .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
+        userFound.setLocation(location);
+        this.assignCity(userFound);
         try {
             repository.save(userFound);
         } catch (DataIntegrityViolationException ex) {
             throw new GenericException("Ocurrio un error al registrar el usuario");
         }
         log.info("Success update user");
+        return userMapper.toDto(userFound);
+    }
+
+    @Override
+    public UserPasswordResponse updatePassword(UUID uuid) {
+        User userFound =
+                repository.findById(uuid).orElseThrow(() -> new UserNotFoundException("Usuario no encontrado."));
+        String passwordDigest = this.generateTemporaryPassword();
+        String password = passwordEncoder.encode(passwordDigest);
+        userFound.setPassword(password);
+        repository.save(userFound);
+        String message = """
+                Estimado/a %s,
+
+                Se ha generado una nueva contraseña temporal para su cuenta. Por favor, utilice esta contraseña para 
+                iniciar sesión:
+
+                Contraseña temporal: %s
+
+                Le recomendamos cambiar esta contraseña por una nueva en cuanto inicie sesión para garantizar la 
+                seguridad de su cuenta.
+
+                **Importante:**
+                Este correo electrónico ha sido generado automáticamente, por lo que no debe responder a este mensaje. 
+                Si no solicitó la recuperación de su contraseña, por favor contacte de inmediato con nuestro equipo de soporte.
+
+                Gracias por confiar en nosotros.
+
+                Atentamente,
+                Innova Technologies
+                """;
+        String personalizedMessage = String.format(message, userFound.getFullName(), passwordDigest);
+        emailService.sendSimpleEmail(userFound.getEmail(), "Contraseña Temporal", personalizedMessage);
+        String messageResponse =
+                String.format("Se ha enviado un email a: %s con la contraseña temporal.", userFound.getEmail());
+        return new UserPasswordResponse(messageResponse);
+    }
+
+    @Override
+    public UserResponse show(UUID uuid) {
+        User userFound = repository.findById(uuid)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no existe"));
+        return userMapper.toDto(userFound);
+    }
+
+    @Override
+    public UserResponse showByPhoneNumberAndBirthDay(String phoneNumber, LocalDate birthDay) {
+        String message = String.format("Usuario no encontrado: nro telefono %s, fecha cumpleaños %s", phoneNumber,
+                birthDay.toString());
+        User userFound = repository.findFirstByPhoneNumberAndBirthDayOrderByCreatedAtAsc(phoneNumber, birthDay)
+                .orElseThrow(() -> new UserNotFoundException(message));
         return userMapper.toDto(userFound);
     }
 
@@ -244,5 +311,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (Objects.nonNull(location.getParentLocation())) {
             user.setCity(location.getParentLocation().getName());
         }
+    }
+
+    String generateTemporaryPassword() {
+        // Longitud deseada de la contraseña
+        final int passwordLength = 20;
+
+        // Conjunto de caracteres permitidos (mayúsculas, minúsculas, números)
+        final String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        final SecureRandom random = new SecureRandom();
+
+        // Genera la contraseña aleatoria
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < passwordLength; i++) {
+            int index = random.nextInt(characters.length());
+            password.append(characters.charAt(index));
+        }
+
+        return password.toString();
     }
 }

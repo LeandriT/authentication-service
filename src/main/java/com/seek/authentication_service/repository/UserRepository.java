@@ -1,6 +1,7 @@
 package com.seek.authentication_service.repository;
 
 import com.seek.authentication_service.model.User;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,4 +28,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmailOrUsername(String email, String username);
+
+    @Query("SELECT u FROM User u WHERE u.phoneNumber = :phoneNumber AND u.birthDay = :birthDay ORDER BY u.createdAt " +
+            "ASC")
+    Optional<User> findFirstByPhoneNumberAndBirthDayOrderByCreatedAtAsc(
+            @Param("phoneNumber") String phoneNumber,
+            @Param("birthDay") LocalDate birthDay
+    );
 }

@@ -19,13 +19,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final String[] withOutAutUrls = new String[] {"/api/users/v1/**", "/api/locations/v1"};
-//,"/login/**", "/register/**"
+    //,"/login/**", "/register/**"
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -45,6 +47,7 @@ public class SecurityConfig {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(
                         req -> req.requestMatchers(withOutAutUrls)
                                 .permitAll()
@@ -84,5 +87,14 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-
+    private UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(false); // Cambia si necesitas permitir cookies
+        config.addAllowedOriginPattern("*"); // Cambia a dominios específicos si es necesario
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }
