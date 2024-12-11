@@ -37,8 +37,8 @@ public class VehicleController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<VehicleResponse>> index(Pageable pageable) {
-        return new ResponseEntity<>(vehicleService.index(pageable), HttpStatus.OK);
+    public ResponseEntity<Page<VehicleResponse>> index(Pageable pageable, @RequestParam("search") String search) {
+        return new ResponseEntity<>(vehicleService.index(pageable, search), HttpStatus.OK);
     }
 
     @PostMapping("/search-vehicle")

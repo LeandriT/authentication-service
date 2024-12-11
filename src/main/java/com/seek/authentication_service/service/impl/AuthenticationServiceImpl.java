@@ -72,13 +72,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public UserResponse register(UserRequest request) {
         log.info("** Registering user **");
         if (repository.findByEmail(request.getEmail()).isPresent()) {
-            final String message = String.format("Usuario ya ha sido registrado con el email: %s.", request.getEmail());
+            final String message = String.format("El usuario ya ha sido registrado con el email: %s.", request.getEmail());
             log.warn(message);
             throw new UserAlreadyExistsException(message);
         }
         if (repository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
             final String message =
-                    String.format("Usuario ya ha sido registrado con el número de telefono: %s.",
+                    String.format("El usuario ya ha sido registrado con el número de telefono: %s.",
                             request.getPhoneNumber());
             log.warn(message);
             throw new UserAlreadyExistsException(message);
@@ -88,7 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User user = userMapper.toModel(request);
         Location location = locationRepository.findById(request.getLocationUuid())
-                .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
+                .orElseThrow(() -> new LocationNotFoundException("Localidad no encontrada"));
         user.setLocation(location);
         this.assignCity(user);
         user.setCity(location.getParentLocation().getName());
@@ -192,6 +192,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public TokenResponse authenticate(LoginRequest request) {
         log.info("Start authenticate user");
+
+        // Verificar si el usuario existe en la base de datos
+        User user = repository.findByEmailOrUsernameOrPhoneNumber(request.getEmail())
+                .orElseThrow(() -> {
+                    String message = String.format("El Usuario que intenta iniciar sesion no existe: %s.", request.getEmail());
+                    log.error(message);
+                    throw new UserNotFoundException(message);
+                });
+
+        // Intentar autenticar al usuario
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -201,16 +211,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             );
         } catch (AuthenticationException ex) {
             log.error("Authentication failed for user: {}", request.getEmail(), ex);
-            final String message = "Credenciales incorrectas";
-            throw new BadCredentialsException(message);
+            throw new BadCredentialsException("No se pudo iniciar sesión. Revisa tu usuario y contraseña.");
         }
-        String message = String.format("Usuario no existe, %s.", request.getEmail());
-        User user =
-                repository.findByEmailOrUsernameOrPhoneNumber(request.getEmail())
-                        .orElseThrow(() -> new UserNotFoundException(message));
+
+        // Generar el token JWT y realizar las operaciones necesarias
         String jwt = jwtService.generateToken(user);
         revokeAllTokenByUser(user);
         saveUserToken(jwt, user);
+
         log.info("End authenticate user");
         return new TokenResponse(jwt);
     }

@@ -17,7 +17,7 @@ public interface VehicleService {
 
     VehicleResponse update(VehicleRequest vehicleRequest);
 
-    Page<VehicleResponse> index(Pageable pageable);
+    Page<VehicleResponse> index(Pageable pageable, String search);
 
     VehicleResponse show(UUID uuid);
 

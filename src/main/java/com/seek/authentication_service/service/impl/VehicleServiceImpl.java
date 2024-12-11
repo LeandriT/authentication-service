@@ -83,9 +83,10 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public Page<VehicleResponse> index(Pageable pageable) {
-        repository.findAll(pageable).forEach(this::calculateParkingStatus);
-        return repository.findAll(pageable).map(mapper::toDto);
+    public Page<VehicleResponse> index(Pageable pageable, String search) {
+        Page<Vehicle> vehiclePage = repository.findByPlateContainingIgnoreCase(search, pageable);
+        vehiclePage.getContent().forEach(this::calculateParkingStatus);
+        return vehiclePage.map(mapper::toDto);
     }
 
     @Override

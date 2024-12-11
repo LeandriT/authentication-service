@@ -5,6 +5,8 @@ import com.seek.authentication_service.model.enums.ParkingStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,5 +39,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
             @Param("userUuid") UUID userUuid,
             @Param("parkingStatus") ParkingStatus parkingStatus
     );
+
+
+    @Query("SELECT v FROM Vehicle v WHERE " +
+            "(:search IS NULL OR UPPER(v.plate) LIKE CONCAT('%', UPPER(:search), '%'))")
+    Page<Vehicle> findByPlateContainingIgnoreCase(@Param("search") String search, Pageable pageable);
 
 }
