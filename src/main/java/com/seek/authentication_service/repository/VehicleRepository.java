@@ -28,7 +28,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     );
 
     @Query("SELECT v FROM Vehicle v " +
-            "WHERE v.plate = :plate " +
+            "WHERE UPPER(v.plate) LIKE CONCAT('%', UPPER(:plate), '%') " +
             "AND DATE(v.parkingDate) = :parkingDate " +
             "AND v.user.uuid = :userUuid " +
             "AND v.parkingStatus = :parkingStatus " +

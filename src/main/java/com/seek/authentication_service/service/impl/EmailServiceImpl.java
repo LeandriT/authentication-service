@@ -3,11 +3,11 @@ package com.seek.authentication_service.service.impl;
 import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
-import java.io.File;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -53,8 +53,8 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true);
 
             // Adjuntar la imagen como contenido inline
-            FileSystemResource image = new FileSystemResource(new File("src/main/resources/static/images/logo.png"));
-            helper.addInline("logoImage", image);
+            Resource imageResource = new ClassPathResource("static/images/logo.png");
+            helper.addInline("logoImage", imageResource);
 
             // Enviar correo
             mailSender.send(mimeMessage);
