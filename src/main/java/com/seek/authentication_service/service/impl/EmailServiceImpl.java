@@ -59,6 +59,7 @@ public class EmailServiceImpl implements EmailService {
             // Enviar correo
             mailSender.send(mimeMessage);
         } catch (Exception e) {
+            log.error("Error enviando email, {}", e.getMessage());
             throw new GenericException("Error al enviar el correo: " + e.getMessage());
         }
     }
