@@ -8,7 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -48,10 +47,9 @@ public class Vehicle extends BaseModel {
 
     @Column(name = "secondary_phone_number")
     private String secondaryPhoneNumber; // Segundo teléfono opcional
-    @Builder.Default()
+    @Builder.Default
     @Column(name = "parking_date", updatable = false)
     private LocalDateTime parkingDate = LocalDateTime.now();
-
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
@@ -87,9 +85,5 @@ public class Vehicle extends BaseModel {
     @NotNull
     private User user;
 
-    @PrePersist
-    protected void onCreate() {
-        this.parkingDate = LocalDateTime.now(); // Establece la fecha de registro al crear
-    }
 
 }
