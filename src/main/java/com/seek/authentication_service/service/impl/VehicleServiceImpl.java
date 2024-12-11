@@ -132,10 +132,12 @@ public class VehicleServiceImpl implements VehicleService {
     void assignExtraInfoVehicle(String plate, Vehicle vehicle) {
         if (Objects.nonNull(plate) && !plate.isEmpty()) {
             VehicleInfoDto vehicleInfoDto = vehicleSearchService.searchVehicle(plate.replace("-", ""));
-            vehicle.setBrand(vehicleInfoDto.getMarca());
-            vehicle.setModel(vehicleInfoDto.getModelo());
-            vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
-            vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
+            if (Objects.nonNull(vehicleInfoDto)) {
+                vehicle.setBrand(vehicleInfoDto.getMarca());
+                vehicle.setModel(vehicleInfoDto.getModelo());
+                vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
+                vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
+            }
         }
     }
 

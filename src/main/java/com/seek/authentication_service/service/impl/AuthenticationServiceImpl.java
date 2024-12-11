@@ -24,7 +24,9 @@ import com.seek.authentication_service.service.JwtService;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
@@ -72,7 +74,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public UserResponse register(UserRequest request) {
         log.info("** Registering user **");
         if (repository.findByEmail(request.getEmail()).isPresent()) {
-            final String message = String.format("El usuario ya ha sido registrado con el email: %s.", request.getEmail());
+            final String message =
+                    String.format("El usuario ya ha sido registrado con el email: %s.", request.getEmail());
             log.warn(message);
             throw new UserAlreadyExistsException(message);
         }
@@ -147,31 +150,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String password = passwordEncoder.encode(passwordDigest);
         userFound.setPassword(password);
         repository.save(userFound);
-        String message = """
-                Estimado/a %s,
-
-                Se ha generado una nueva contraseña temporal para su cuenta. Por favor, utilice esta contraseña para 
-                iniciar sesión:
-
-                Contraseña temporal: %s
-
-                Le recomendamos cambiar esta contraseña por una nueva en cuanto inicie sesión para garantizar la 
-                seguridad de su cuenta.
-
-                **Importante:**
-                Este correo electrónico ha sido generado automáticamente, por lo que no debe responder a este mensaje. 
-                Si no solicitó la recuperación de su contraseña, por favor contacte de inmediato con nuestro equipo de soporte.
-
-                Gracias por confiar en nosotros.
-
-                Atentamente,
-                Innova Technologies
-                """;
-        String personalizedMessage = String.format(message, userFound.getFullName(), passwordDigest);
-        emailService.sendSimpleEmail(userFound.getEmail(), "Contraseña Temporal", personalizedMessage);
+        this.sendHtmlMail(userFound.getFullName(), passwordDigest, userFound.getEmail());
         String messageResponse =
                 String.format("Se ha enviado un email a: %s con la contraseña temporal.", userFound.getEmail());
         return new UserPasswordResponse(messageResponse);
+    }
+
+    private void sendHtmlMail(String fullName, String password, String email) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("fullName", fullName);
+        variables.put("password", password);
+
+        emailService.sendHtmlEmail(
+                email,
+                "Contraseña Temporal - Parqueo Express",
+                variables,
+                "email-template"
+        );
     }
 
     @Override
@@ -196,9 +191,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Verificar si el usuario existe en la base de datos
         User user = repository.findByEmailOrUsernameOrPhoneNumber(request.getEmail())
                 .orElseThrow(() -> {
-                    String message = String.format("El Usuario que intenta iniciar sesion no existe: %s.", request.getEmail());
+                    String message =
+                            String.format("El Usuario que intenta iniciar sesion no existe: %s.", request.getEmail());
                     log.error(message);
-                    throw new UserNotFoundException(message);
+                    return new UserNotFoundException(message);
                 });
 
         // Intentar autenticar al usuario
@@ -284,7 +280,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Intentar encontrar un nombre de usuario único basado en las combinaciones generadas
         String uniqueUsername = null;
         for (String candidate : usernameVariants) {
-            if (!repository.findByUsername(candidate).isPresent()) {
+            if (repository.findByUsername(candidate).isEmpty()) {
                 uniqueUsername = candidate;
                 break;
             }
