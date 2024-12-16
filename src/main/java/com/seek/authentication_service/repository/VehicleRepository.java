@@ -95,13 +95,13 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
             @Param("endOfMonth") LocalDateTime endOfMonth
     );
 
-    @Query("SELECT COALESCE(SUM(v.amountCalculated), 0.0) " +
+    @Query("SELECT v " +
             "FROM Vehicle v " +
             "WHERE v.user.uuid = :userUuid " +
             "AND v.parkingStatus = :parkingStatus " +
             "AND v.parkingDate >= :startOfDay " +
             "AND v.parkingDate < :endOfDay")
-    BigDecimal getTotalMoneyFromVehiclesTodayPerStatus(
+    List<Vehicle> getTotalMoneyFromVehiclesTodayPerStatus(
             @Param("userUuid") UUID userUuid,
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay,

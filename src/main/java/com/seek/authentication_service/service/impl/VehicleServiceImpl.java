@@ -142,12 +142,19 @@ public class VehicleServiceImpl implements VehicleService {
         dashboardResponse.setTotalCollectedMonth(totalCollectedMonth);
 
         BigDecimal totalMoneyFromParkedVehicles =
-                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay,
-                        ParkingStatus.PARKED);
+                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay, ParkingStatus.PARKED)
+                        .stream()
+                        .peek(this::calculateParkingStatus) // Calcular el monto estacionado
+                        .map(Vehicle::getAmountCalculated) // Obtener el monto calculado
+                        .reduce(BigDecimal.ZERO, BigDecimal::add); // Sumar todos los valores
         dashboardResponse.setTotalMoneyFromParkedVehicles(totalMoneyFromParkedVehicles);
 
         BigDecimal totalMoneyFromPaidVehicles =
-                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay, ParkingStatus.PAID);
+                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay, ParkingStatus.PAID)
+                        .stream()
+                        .peek(this::calculateParkingStatus) // Calcular el monto estacionado
+                        .map(Vehicle::getAmountCalculated) // Obtener el monto calculado
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);;
         dashboardResponse.setTotalMoneyFromPaidVehicles(totalMoneyFromPaidVehicles);
         return dashboardResponse;
     }
