@@ -22,7 +22,6 @@ public class UserResponse extends BaseDto {
     private String phoneNumber;
     private LocalDate birthDay;
     private Role role;
-    private String city;
     private BigDecimal rate;
     private LocationResponse location;
 }

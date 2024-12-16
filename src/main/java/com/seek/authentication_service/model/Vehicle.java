@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -69,6 +70,9 @@ public class Vehicle extends BaseModel {
 
     @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal rate;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "location_uuid", referencedColumnName = "uuid", nullable = false)
+    private Location location;
 
     @Column(name = "brand")
     private String brand;

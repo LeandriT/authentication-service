@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -93,8 +92,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Location location = locationRepository.findById(request.getLocationUuid())
                 .orElseThrow(() -> new LocationNotFoundException("Localidad no encontrada"));
         user.setLocation(location);
-        this.assignCity(user);
-        user.setCity(location.getParentLocation().getName());
         user.setUsername(this.generateUniqueUsername(user.getFullName()));
         try {
             user = repository.save(user);
@@ -132,7 +129,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Location location = locationRepository.findById(request.getLocationUuid())
                 .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
         userFound.setLocation(location);
-        this.assignCity(userFound);
         try {
             repository.save(userFound);
         } catch (DataIntegrityViolationException ex) {
@@ -310,12 +306,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return uniqueUsername;
     }
 
-    private void assignCity(User user) {
-        Location location = user.getLocation();
-        if (Objects.nonNull(location.getParentLocation())) {
-            user.setCity(location.getParentLocation().getName());
-        }
-    }
 
     String generateTemporaryPassword() {
         // Longitud deseada de la contraseña

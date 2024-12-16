@@ -13,6 +13,8 @@ CREATE TABLE vehicles (
     amount_charged NUMERIC(10,2) DEFAULT 0.0,
     amount_calculated NUMERIC(10,2) DEFAULT 0.0,
     rate NUMERIC(10,2) DEFAULT 0.0,
+    location_uuid UUID NOT NULL,
+
     --EXTRA INFO
     brand VARCHAR(100),
     model VARCHAR(100),
@@ -23,5 +25,6 @@ CREATE TABLE vehicles (
     deleted_at TIMESTAMP WITH TIME ZONE, -- Marca de tiempo de cuándo fue eliminado el registro
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- Marca de tiempo de creación
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- Marca de tiempo de actualización
-    FOREIGN KEY (user_uuid) REFERENCES users(uuid)
+    FOREIGN KEY (user_uuid) REFERENCES users(uuid),
+    FOREIGN KEY (location_uuid) REFERENCES locations(uuid)
 );

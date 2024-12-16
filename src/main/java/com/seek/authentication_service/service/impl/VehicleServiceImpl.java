@@ -5,11 +5,13 @@ import com.seek.authentication_service.client.dto.VehicleInfoDto;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
+import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.exceptions.VehicleNotFoundException;
 import com.seek.authentication_service.mapper.VehicleMapper;
+import com.seek.authentication_service.model.Location;
 import com.seek.authentication_service.model.User;
 import com.seek.authentication_service.model.Vehicle;
 import com.seek.authentication_service.model.enums.ParkingStatus;
@@ -17,6 +19,7 @@ import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.repository.VehicleRepository;
 import com.seek.authentication_service.service.VehicleService;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,13 +54,14 @@ public class VehicleServiceImpl implements VehicleService {
             throw new GenericException(String.format("Vehiculo ya registrado, aun no a pagado parqueo placa: %s.",
                     vehicleRequest.getPlate()));
         }
-        Vehicle model = mapper.toModel(vehicleRequest);
-        this.assignExtraInfoVehicle(vehicleRequest.getPlate(), model);
+        Vehicle vehicle = mapper.toModel(vehicleRequest);
+        this.assignExtraInfoVehicle(vehicleRequest.getPlate(), vehicle);
         User user = userRepository.findById(vehicleRequest.getUserUuid()).orElseThrow(UserNotFoundException::new);
-        model.setUser(user);
-        model.setRate(user.getRate());
-        model = repository.save(model);
-        return mapper.toDto(model);
+        vehicle.setUser(user);
+        vehicle.setRate(user.getRate());
+        this.assignLocation(vehicle, user);
+        vehicle = repository.save(vehicle);
+        return mapper.toDto(vehicle);
     }
 
     @Override
@@ -106,6 +110,61 @@ public class VehicleServiceImpl implements VehicleService {
         return vehicles.stream().map(mapper::toDto).toList();
     }
 
+    @Override
+    public DashboardResponse dashboard(UUID userUuid) {
+        // DashboardResponse para encapsular los resultados
+        DashboardResponse dashboardResponse = new DashboardResponse();
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59, 999000000);
+        LocalDateTime now = LocalDateTime.now();
+        BigDecimal totalCollectedToday =
+                repository.getTotalChargedByUserForCurrentDate(userUuid, startOfDay, now);
+        dashboardResponse.setTotalCollectedToday(totalCollectedToday);
+        BigDecimal estimatedToBeCollectedToday = this.estimateTotal(totalCollectedToday, startOfDay, now);
+        dashboardResponse.setEstimatedToBeCollectedToday(estimatedToBeCollectedToday);
+
+        Long totalVehiclesParkedToday = repository.countVehiclesByUserForCurrentDay(userUuid, startOfDay, endOfDay);
+        dashboardResponse.setTotalVehiclesParkedToday(totalVehiclesParkedToday);
+
+        Long totalVehiclesUnpaid =
+                repository.countVehiclesByUserPerStatusForToday(userUuid, startOfDay, endOfDay, ParkingStatus.PARKED);
+        dashboardResponse.setTotalVehiclesUnpaid(totalVehiclesUnpaid);
+        Long totalVehiclesPaid =
+                repository.countVehiclesByUserPerStatusForToday(userUuid, startOfDay, endOfDay, ParkingStatus.PAID);
+        dashboardResponse.setTotalVehiclesPaid(totalVehiclesPaid);
+
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = LocalDate.now()
+                .withDayOfMonth(LocalDate.now().lengthOfMonth())
+                .atTime(23, 59, 59, 999000000);
+        BigDecimal totalCollectedMonth =
+                repository.getTotalCollectedForCurrentMonth(userUuid, startOfMonth, endOfMonth);
+        dashboardResponse.setTotalCollectedMonth(totalCollectedMonth);
+
+        BigDecimal totalMoneyFromParkedVehicles =
+                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay,
+                        ParkingStatus.PARKED);
+        dashboardResponse.setTotalMoneyFromParkedVehicles(totalMoneyFromParkedVehicles);
+
+        BigDecimal totalMoneyFromPaidVehicles =
+                repository.getTotalMoneyFromVehiclesTodayPerStatus(userUuid, startOfDay, endOfDay, ParkingStatus.PAID);
+        dashboardResponse.setTotalMoneyFromPaidVehicles(totalMoneyFromPaidVehicles);
+        return dashboardResponse;
+    }
+
+    private BigDecimal estimateTotal(BigDecimal totalCharged, LocalDateTime startDare, LocalDateTime endDate) {
+        long hoursElapsed = Duration.between(startDare, endDate).toHours();
+        if (hoursElapsed == 0) {
+            // Evitar división por cero si la hora actual está en la medianoche
+            return BigDecimal.ZERO;
+        }
+
+        // Aplicar la regla de tres para estimar el total en 24 horas
+        return totalCharged
+                .multiply(BigDecimal.valueOf(24))
+                .divide(BigDecimal.valueOf(hoursElapsed), 2, RoundingMode.HALF_UP);
+    }
+
     public void calculateParkingStatus(Vehicle vehicle) {
         // Calcular el tiempo en minutos
         long parkedTimeInMinutes = Duration.between(vehicle.getParkingDate(), LocalDateTime.now()).toMinutes();
@@ -139,6 +198,11 @@ public class VehicleServiceImpl implements VehicleService {
                 vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
             }
         }
+    }
+
+    void assignLocation(Vehicle vehicle, User user) {
+        Location location = user.getLocation();
+        vehicle.setLocation(location);
     }
 
 }

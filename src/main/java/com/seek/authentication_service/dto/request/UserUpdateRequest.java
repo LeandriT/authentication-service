@@ -32,8 +32,6 @@ public class UserUpdateRequest implements Serializable {
     @NotEmpty(message = "La telefono es obligatorio")
     private String phoneNumber;
 
-    private String city;
-
     @NotEmpty(message = "La contraseña no puede estar vacía")
     private String password;
 

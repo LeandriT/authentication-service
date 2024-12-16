@@ -29,7 +29,6 @@ public class UserRequest implements Serializable {
     @Email(message = "Email is not valid")
     private String email;
     private String phoneNumber;
-    @NotEmpty(message = "City is required")
     @NotEmpty(message = "Password not be null")
     private String password;
     @NotNull(message = "BirthDay not be null")
@@ -37,8 +36,6 @@ public class UserRequest implements Serializable {
 
     @NotEmpty(message = "Role not be null")
     private Role role;
-    @Builder.Default()
-    private String city = "QUITO";
     @NotNull(message = "Rate is required")
     private BigDecimal rate;
 

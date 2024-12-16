@@ -21,6 +21,7 @@ public interface VehicleMapper {
     Vehicle toModel(VehicleRequest request);
 
     @Mapping(source = "user.uuid", target = "userUuid")
+    @Mapping(source = "location.parentLocation.name", target = "location.parentName")
     VehicleResponse toDto(Vehicle entity);
 
     Vehicle updateModel(VehicleRequest request, @MappingTarget Vehicle entity);

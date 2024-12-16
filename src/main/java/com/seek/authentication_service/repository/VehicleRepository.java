@@ -2,7 +2,9 @@ package com.seek.authentication_service.repository;
 
 import com.seek.authentication_service.model.Vehicle;
 import com.seek.authentication_service.model.enums.ParkingStatus;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -45,4 +47,64 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
             "(:search IS NULL OR UPPER(v.plate) LIKE CONCAT('%', UPPER(:search), '%'))")
     Page<Vehicle> findByPlateContainingIgnoreCase(@Param("search") String search, Pageable pageable);
 
+
+    @Query("SELECT COALESCE(SUM(v.amountCharged), 0.0) " +
+            "FROM Vehicle v " +
+            "WHERE v.user.uuid = :userUuid " +
+            "AND v.paymentDate >= :startDate " +
+            "AND v.paymentDate < :endDate")
+    BigDecimal getTotalChargedByUserForCurrentDate(
+            @Param("userUuid") UUID userUuid,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("SELECT COUNT(v) " +
+            "FROM Vehicle v " +
+            "WHERE v.user.uuid = :userUuid " +
+            "AND v.parkingDate >= :startOfDay " +
+            "AND v.parkingDate < :endOfDay")
+    Long countVehiclesByUserForCurrentDay(
+            @Param("userUuid") UUID userUuid,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("SELECT COUNT(v) " +
+            "FROM Vehicle v " +
+            "WHERE v.user.uuid = :userUuid " +
+            "AND v.parkingDate >= :startOfDay " +
+            "AND v.parkingDate < :endOfDay " +
+            "AND v.parkingStatus = :parkingStatus")
+    Long countVehiclesByUserPerStatusForToday(
+            @Param("userUuid") UUID userUuid,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            @Param("parkingStatus") ParkingStatus parkingStatus
+    );
+
+    @Query("SELECT COALESCE(SUM(v.amountCharged), 0.0) " +
+            "FROM Vehicle v " +
+            "WHERE v.user.uuid = :userUuid " +
+            "AND v.paymentDate >= :startOfMonth " +
+            "AND v.paymentDate < :endOfMonth " +
+            "AND v.parkingStatus = 'PAID'")
+    BigDecimal getTotalCollectedForCurrentMonth(
+            @Param("userUuid") UUID userUuid,
+            @Param("startOfMonth") LocalDateTime startOfMonth,
+            @Param("endOfMonth") LocalDateTime endOfMonth
+    );
+
+    @Query("SELECT COALESCE(SUM(v.amountCalculated), 0.0) " +
+            "FROM Vehicle v " +
+            "WHERE v.user.uuid = :userUuid " +
+            "AND v.parkingStatus = :parkingStatus " +
+            "AND v.parkingDate >= :startOfDay " +
+            "AND v.parkingDate < :endOfDay")
+    BigDecimal getTotalMoneyFromVehiclesTodayPerStatus(
+            @Param("userUuid") UUID userUuid,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            @Param("parkingStatus") ParkingStatus parkingStatus
+    );
 }

@@ -37,4 +37,5 @@ public class VehicleResponse extends BaseDto {
     private String model;
     private String modelYear;
     private String manufacturingCountry;
+    private LocationResponse location;
 }

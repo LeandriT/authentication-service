@@ -41,6 +41,10 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //TICKET
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.itextpdf:itext7-core:9.0.0'
 }
 
 tasks.named('test') {

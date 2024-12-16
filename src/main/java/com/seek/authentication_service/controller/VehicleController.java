@@ -3,6 +3,7 @@ package com.seek.authentication_service.controller;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
+import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import com.seek.authentication_service.service.VehicleService;
 import jakarta.validation.Valid;
@@ -53,5 +54,11 @@ public class VehicleController {
             @RequestParam("vehicle_uuid") UUID uuid,
             @RequestBody VehiclePaidRequest vehiclePaidRequest) {
         return new ResponseEntity<>(vehicleService.paid(uuid, vehiclePaidRequest), HttpStatus.OK);
+    }
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<DashboardResponse> dashboard(@RequestParam("userUuid") UUID userUuid) {
+        return new ResponseEntity<>(vehicleService.dashboard(userUuid), HttpStatus.OK);
     }
 }

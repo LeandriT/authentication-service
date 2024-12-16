@@ -3,6 +3,7 @@ package com.seek.authentication_service.service;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
+import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import java.util.List;
 import java.util.UUID;
@@ -22,4 +23,6 @@ public interface VehicleService {
     VehicleResponse show(UUID uuid);
 
     List<VehicleResponse> showByPlate(SearchVehicleRequest searchVehicleRequest);
+
+    DashboardResponse dashboard(UUID userUuid);
 }

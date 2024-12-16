@@ -57,9 +57,6 @@ public class User extends BaseModel implements UserDetails {
     @Column(name = "rate", nullable = false, precision = 10, scale = 2) // Para dinero
     private BigDecimal rate;
 
-    @NotNull
-    private String city;
-
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_uuid", referencedColumnName = "uuid", nullable = false)
     private Location location;
@@ -120,14 +117,6 @@ public class User extends BaseModel implements UserDetails {
 
     public void setRate(BigDecimal rate) {
         this.rate = rate;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
     }
 
     public Role getRole() {
