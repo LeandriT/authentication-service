@@ -96,6 +96,7 @@ public class AuthenticationController {
     @PostMapping("/refresh-token")
     @PermitAll
     public ResponseEntity<TokenResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+        log.info("Attempt to generate refresh token");
         return ResponseEntity.ok(authService.validateToken(refreshTokenRequest));
     }
 }

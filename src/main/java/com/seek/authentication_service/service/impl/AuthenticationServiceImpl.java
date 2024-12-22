@@ -226,6 +226,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenResponse validateToken(RefreshTokenRequest refreshTokenRequest) {
+        log.info("Start Regenerate access token with refresh token");
         RefreshToken refreshToken =
                 refreshTokenService.findByToken(refreshTokenRequest.getToken()).orElseThrow(
                         () -> new GenericException("Refresh token no encontrado")
@@ -239,8 +240,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // 3. (Opcional) Generar nuevo Refresh Token si está cerca de expirar
         if (validRefreshToken.getExpirationDate().isBefore(Instant.now().plus(7, ChronoUnit.DAYS))) {
             refreshTokenService.updateRefreshToken(validRefreshToken);
+            log.info("2 End Regenerate access token with refresh token");
             return new TokenResponse(accessToken, validRefreshToken.getToken());
         }
+        log.info("1 End Regenerate access token with refresh token");
         return TokenResponse.builder()
                 .token(accessToken)
                 .refreshToken(validRefreshToken.getToken())
