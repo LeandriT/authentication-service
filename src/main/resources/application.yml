@@ -2,8 +2,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: -------
-    password: -------
+
     properties:
       mail:
         smtp:
@@ -20,9 +19,7 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/authentication-service}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+
     hikari:
       maximum-pool-size: 100
       minimum-idle: 10
@@ -46,6 +43,7 @@ spring:
 
   flyway:
     enabled: true
+    connect-retries: 3
     locations: classpath:db/migration
     baseline-on-migrate: true
 
@@ -54,3 +52,8 @@ server:
   error:
     include-stacktrace: always
     include-message: always
+app:
+  secret:
+    key: w4Gx5_1JH-34xO1vF9ZwLgMphO1ANzTG3hWpBBfyOjo=
+  time:
+    extra: 31 #dias
