@@ -2,6 +2,7 @@ package com.seek.authentication_service.service.impl;
 
 
 import com.seek.authentication_service.dto.request.LoginRequest;
+import com.seek.authentication_service.dto.request.RefreshTokenRequest;
 import com.seek.authentication_service.dto.request.UserRequest;
 import com.seek.authentication_service.dto.request.UserUpdateRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
@@ -13,6 +14,7 @@ import com.seek.authentication_service.exceptions.UserAlreadyExistsException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.mapper.UserMapper;
 import com.seek.authentication_service.model.Location;
+import com.seek.authentication_service.model.RefreshToken;
 import com.seek.authentication_service.model.Token;
 import com.seek.authentication_service.model.User;
 import com.seek.authentication_service.repository.LocationRepository;
@@ -21,8 +23,11 @@ import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.service.AuthenticationService;
 import com.seek.authentication_service.service.EmailService;
 import com.seek.authentication_service.service.JwtService;
+import com.seek.authentication_service.service.RefreshTokenService;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthenticationServiceImpl(UserRepository repository,
                                      PasswordEncoder passwordEncoder,
@@ -59,7 +65,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      AuthenticationManager authenticationManager,
                                      UserMapper userMapper,
                                      LocationRepository locationRepository,
-                                     EmailService emailService) {
+                                     EmailService emailService,
+                                     RefreshTokenService refreshTokenService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -68,6 +75,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.userMapper = userMapper;
         this.locationRepository = locationRepository;
         this.emailService = emailService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public UserResponse register(UserRequest request) {
@@ -99,7 +107,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new GenericException("Ocurrio un error al registrar el usuario");
         }
         String jwt = jwtService.generateToken(user);
-        saveUserToken(jwt, user);
+        this.saveUserToken(jwt, user);
+        refreshTokenService.generateRefreshToken(user);
         log.info("Success create user");
         return userMapper.toDto(user);
     }
@@ -210,9 +219,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String jwt = jwtService.generateToken(user);
         revokeAllTokenByUser(user);
         saveUserToken(jwt, user);
-
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
         log.info("End authenticate user");
-        return new TokenResponse(jwt);
+        return new TokenResponse(jwt, refreshToken.getToken());
+    }
+
+    @Override
+    public TokenResponse validateToken(RefreshTokenRequest refreshTokenRequest) {
+        RefreshToken refreshToken =
+                refreshTokenService.findByToken(refreshTokenRequest.getToken()).orElseThrow(
+                        () -> new GenericException("Refresh token no encontrado")
+                );
+        RefreshToken validRefreshToken = refreshTokenService.validateRefreshToken(refreshToken);
+
+        User user = validRefreshToken.getUser();
+        String accessToken = jwtService.generateToken(user);
+        revokeAllTokenByUser(user);
+        saveUserToken(accessToken, user);
+        // 3. (Opcional) Generar nuevo Refresh Token si está cerca de expirar
+        if (validRefreshToken.getExpirationDate().isBefore(Instant.now().plus(7, ChronoUnit.DAYS))) {
+            refreshTokenService.updateRefreshToken(validRefreshToken);
+            return new TokenResponse(accessToken, validRefreshToken.getToken());
+        }
+        return TokenResponse.builder()
+                .token(accessToken)
+                .refreshToken(validRefreshToken.getToken())
+                .build();
     }
 
     private void revokeAllTokenByUser(User user) {

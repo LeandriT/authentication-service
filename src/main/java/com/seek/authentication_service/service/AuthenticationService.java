@@ -1,6 +1,7 @@
 package com.seek.authentication_service.service;
 
 import com.seek.authentication_service.dto.request.LoginRequest;
+import com.seek.authentication_service.dto.request.RefreshTokenRequest;
 import com.seek.authentication_service.dto.request.UserRequest;
 import com.seek.authentication_service.dto.request.UserUpdateRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
@@ -23,4 +24,5 @@ public interface AuthenticationService {
 
     TokenResponse authenticate(LoginRequest request);
 
+    TokenResponse validateToken(RefreshTokenRequest refreshTokenRequest);
 }

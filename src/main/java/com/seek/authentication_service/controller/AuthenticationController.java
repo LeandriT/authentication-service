@@ -1,6 +1,7 @@
 package com.seek.authentication_service.controller;
 
 import com.seek.authentication_service.dto.request.LoginRequest;
+import com.seek.authentication_service.dto.request.RefreshTokenRequest;
 import com.seek.authentication_service.dto.request.UserRequest;
 import com.seek.authentication_service.dto.request.UserUpdateRequest;
 import com.seek.authentication_service.dto.response.TokenResponse;
@@ -90,5 +91,11 @@ public class AuthenticationController {
     ) {
         log.info("Attempt to login: " + request.getEmail());
         return ResponseEntity.ok(authService.authenticate(request));
+    }
+
+    @PostMapping("/refresh-token")
+    @PermitAll
+    public ResponseEntity<TokenResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return ResponseEntity.ok(authService.validateToken(refreshTokenRequest));
     }
 }

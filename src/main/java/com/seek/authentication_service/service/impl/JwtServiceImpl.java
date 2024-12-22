@@ -8,13 +8,19 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtServiceImpl implements JwtService {
+    @Value("${app.time.extra:31}")
+    private Integer days;
+    @Value("${app.secret.key:w4Gx5_1JH-34xO1vF9ZwLgMphO1ANzTG3hWpBBfyOjo=}")
+    private String secretKey;
 
     private final TokenRepository tokenRepository;
 
@@ -62,19 +68,20 @@ public class JwtServiceImpl implements JwtService {
 
 
     public String generateToken(User user) {
+        long expirationTimeInMillis = TimeUnit.DAYS.toMillis(days);
+
         return Jwts
                 .builder()
                 .claim("uuid", user.getUuid())
                 .subject(user.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
+                .expiration(new Date(System.currentTimeMillis() + expirationTimeInMillis)) //24 horas
                 .signWith(getSigninKey())
                 .compact();
     }
 
     public SecretKey getSigninKey() {
-        String SECRET_KEY = "4bb6d1dfbafb64a681139d1586b6f1160d18159afd57c8c79136d7490630407c";
-        byte[] keyBytes = Decoders.BASE64URL.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
