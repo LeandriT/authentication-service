@@ -18,6 +18,7 @@ import com.seek.authentication_service.model.enums.ParkingStatus;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.repository.VehicleRepository;
 import com.seek.authentication_service.service.VehicleService;
+import io.github.perplexhub.rsql.RSQLJPASupport;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -30,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -88,7 +90,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Page<VehicleResponse> index(Pageable pageable, String search) {
-        Page<Vehicle> vehiclePage = repository.findByPlateContainingIgnoreCase(search, pageable);
+        Specification<Vehicle> spec = RSQLJPASupport.toSpecification(search);
+        Page<Vehicle> vehiclePage = repository.findAll(spec, pageable);
         vehiclePage.getContent().forEach(this::calculateParkingStatus);
         return vehiclePage.map(mapper::toDto);
     }
