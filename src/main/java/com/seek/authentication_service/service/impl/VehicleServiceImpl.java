@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -271,15 +272,32 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     void assignExtraInfoVehicle(String plate, Vehicle vehicle) {
+
         if (Objects.nonNull(plate) && !plate.isEmpty()) {
-            VehicleInfoDto vehicleInfoDto = vehicleSearchService.searchVehicle(plate.replace("-", ""));
-            if (Objects.nonNull(vehicleInfoDto)) {
-                vehicle.setBrand(vehicleInfoDto.getMarca());
-                vehicle.setModel(vehicleInfoDto.getModelo());
-                vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
-                vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
+            if (isValidEcuadorianPlate(plate)) {
+                VehicleInfoDto vehicleInfoDto = vehicleSearchService.searchVehicle(plate.replace("-", ""));
+                if (Objects.nonNull(vehicleInfoDto)) {
+                    vehicle.setBrand(vehicleInfoDto.getMarca());
+                    vehicle.setModel(vehicleInfoDto.getModelo());
+                    vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
+                    vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
+                }
             }
         }
+    }
+
+    boolean isValidEcuadorianPlate(String plate) {
+        if (plate == null || plate.isEmpty()) {
+            return false;
+        }
+
+        // Patrón para placas de vehículos particulares: ABC-1234
+        String vehiclePlatePattern = "^[A-Z]{3}-\\d{3,4}$";
+        // Patrón para placas de motocicletas: AB-123A
+        String motorcyclePlatePattern = "^[A-Z]{2}-\\d{3}[A-Z]$";
+
+        // Validar contra los patrones
+        return Pattern.matches(vehiclePlatePattern, plate) || Pattern.matches(motorcyclePlatePattern, plate);
     }
 
     void assignLocation(Vehicle vehicle, User user) {
