@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -194,7 +195,9 @@ public class VehicleServiceImpl implements VehicleService {
                 String.format("user.uuid==%s;parkingDate>='%s';parkingDate<='%s'", userUuid, startOfDay, endOfDay);
         log.info("Consulta RSQL generada: {}", search);
         Specification<Vehicle> spec = RSQLJPASupport.toSpecification(search);
-        List<Vehicle> vehicleList = repository.findAll(spec);
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        List<Vehicle> vehicleList = repository.findAll(spec, sort);
         vehicleList.stream().filter(item -> item.getParkingStatus().equals(ParkingStatus.PARKED))
                 .forEach(this::calculateParkingStatus);
         // Variables para totales
