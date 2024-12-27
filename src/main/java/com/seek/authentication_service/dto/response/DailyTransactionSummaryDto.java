@@ -2,8 +2,8 @@ package com.seek.authentication_service.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,5 +22,6 @@ public class DailyTransactionSummaryDto {
     @Builder.Default
     private BigDecimal totalCalculated = BigDecimal.ZERO;
     private String location;
-    private Set<VehicleTransactionLineDto> totals = new HashSet<>();
+    @Builder.Default
+    private List<VehicleTransactionLineDto> totals = new ArrayList<>();
 }

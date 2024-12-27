@@ -69,81 +69,93 @@ public class PdfFileGeneratorImpl implements PdfFileGenerator {
                     .setMarginBottom(10));
 
             // Resumen de transacciones
-            document.add(new Paragraph("Resumen de Parqueo")
+            document.add(new Paragraph("Resumen de Parqueos")
                     .setFont(boldFont)
                     .setFontSize(14)
                     .setTextAlignment(TextAlignment.CENTER)
                     .setMarginBottom(10));
 
             if (dailyTransactionSummaryDto.getTotals().isEmpty()) {
-                document.add(new Paragraph("No se encontraron transacciones para la fecha especificada.")
+                document.add(new Paragraph("No se encontraron parqueos a la fecha.")
                         .setFontSize(12)
                         .setFontColor(ColorConstants.RED)
                         .setTextAlignment(TextAlignment.CENTER)
                         .setMarginTop(10));
             } else {
                 // Ajuste de tabla para llenar toda la hoja
-                float[] columnWidths = {1, 2, 2, 1, 1, 1}; // Proporción relativa de las columnas
+                float[] columnWidths = {1, 2, 2, 1, 1, 1, 1}; // Proporción relativa de las columnas
                 Table table = new Table(columnWidths).useAllAvailableWidth().setMarginTop(10);
 
-// Encabezados de tabla con fondo
-                table.addHeaderCell(new Cell().add(new Paragraph("PLACA").setFont(boldFont))
+                // Encabezados de tabla con fondo
+                table.addHeaderCell(new Cell().add(new Paragraph("PLACA").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
-                table.addHeaderCell(new Cell().add(new Paragraph("NOMBRES").setFont(boldFont))
+                table.addHeaderCell(new Cell().add(new Paragraph("NOMBRES").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
-                table.addHeaderCell(new Cell().add(new Paragraph("TELEFONO").setFont(boldFont))
+                table.addHeaderCell(new Cell().add(new Paragraph("TELEFONO").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
-                table.addHeaderCell(new Cell().add(new Paragraph("TIEMPO H").setFont(boldFont))
+                table.addHeaderCell(new Cell().add(new Paragraph("TIEMPO").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
-                table.addHeaderCell(new Cell().add(new Paragraph("CALCULADO $").setFont(boldFont))
+                table.addHeaderCell(new Cell().add(new Paragraph("COBRAR $").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
-                table.addHeaderCell(new Cell().add(new Paragraph("COBRADO $").setFont(boldFont))
+                table.addHeaderCell(new Cell().add(new Paragraph("COBRADO $").setFont(boldFont).setFontSize(10))
+                        .setBackgroundColor(headerColor)
+                        .setTextAlignment(TextAlignment.CENTER));
+                table.addHeaderCell(new Cell().add(new Paragraph("ESTADO").setFont(boldFont).setFontSize(10))
                         .setBackgroundColor(headerColor)
                         .setTextAlignment(TextAlignment.CENTER));
 
-// Filas de datos con fondo alternado
+                // Filas de datos con fondo alternado
                 boolean alternate = false;
                 for (VehicleTransactionLineDto line : dailyTransactionSummaryDto.getTotals()) {
                     Color rowColor = alternate ? alternateRowColor : ColorConstants.WHITE;
-                    table.addCell(new Cell().add(new Paragraph(line.getPlate()).setFont(regularFont))
+                    table.addCell(new Cell().add(new Paragraph(line.getPlate()).setFont(regularFont).setFontSize(9))
                             .setBackgroundColor(rowColor)
                             .setTextAlignment(TextAlignment.CENTER));
-                    table.addCell(new Cell().add(new Paragraph(line.getFullName()).setFont(regularFont))
+                    table.addCell(new Cell().add(new Paragraph(line.getFullName()).setFont(regularFont).setFontSize(9))
                             .setBackgroundColor(rowColor)
                             .setTextAlignment(TextAlignment.CENTER));
-                    table.addCell(new Cell().add(new Paragraph(line.getPhoneNumber()).setFont(regularFont))
-                            .setBackgroundColor(rowColor)
-                            .setTextAlignment(TextAlignment.CENTER));
+                    table.addCell(
+                            new Cell().add(new Paragraph(line.getPhoneNumber()).setFont(regularFont).setFontSize(9))
+                                    .setBackgroundColor(rowColor)
+                                    .setTextAlignment(TextAlignment.CENTER));
 
                     table.addCell(new Cell().add(
-                                    new Paragraph(this.convertMinutesToReadableFormat(line.getParkedTime())).setFont(
-                                            regularFont))
+                                    new Paragraph(this.convertMinutesToReadableFormat(line.getParkedTime()))
+                                            .setFont(regularFont).setFontSize(9)
+                            )
                             .setBackgroundColor(rowColor)
                             .setTextAlignment(TextAlignment.CENTER));
                     table.addCell(new Cell().add(
-                                    new Paragraph(line.getAmountCalculated().toString()).setFont(regularFont))
+                                    new Paragraph(line.getAmountCalculated().toString())
+                                            .setFont(regularFont).setFontSize(9))
                             .setBackgroundColor(rowColor)
                             .setTextAlignment(TextAlignment.CENTER));
                     table.addCell(new Cell().add(
-                                    new Paragraph(line.getAmountCharged().toString()).setFont(regularFont))
+                                    new Paragraph(line.getAmountCharged().toString()).setFont(regularFont).setFontSize(9))
+                            .setBackgroundColor(rowColor)
+                            .setTextAlignment(TextAlignment.CENTER));
+                    table.addCell(new Cell().add(
+                                    new Paragraph(line.getParkingStatus().getDescription()).setFont(regularFont).setFontSize(9))
                             .setBackgroundColor(rowColor)
                             .setTextAlignment(TextAlignment.CENTER));
                     alternate = !alternate;
                 }
                 // Agregar fila de total
                 Cell totalLabelCell = new Cell(1, 4) // Fila con colspan de 3
-                        .add(new Paragraph("TOTAL $").setFont(boldFont).setTextAlignment(TextAlignment.RIGHT))
+                        .add(new Paragraph("TOTAL $").setFont(boldFont).setFontSize(10)
+                                .setTextAlignment(TextAlignment.RIGHT))
                         .setBackgroundColor(headerColor);
                 table.addCell(totalLabelCell);
 
                 Cell totalCalculatedValueCell = new Cell() // Celda para el valor del total
                         .add(new Paragraph(dailyTransactionSummaryDto.getTotalCalculated().toString())
                                 .setFont(boldFont)
+                                .setFontSize(10)
                                 .setTextAlignment(TextAlignment.CENTER))
                         .setBackgroundColor(headerColor);
 
@@ -151,12 +163,16 @@ public class PdfFileGeneratorImpl implements PdfFileGenerator {
                 Cell totalChargedValueCell = new Cell() // Celda para el valor del total
                         .add(new Paragraph(dailyTransactionSummaryDto.getTotalCharged().toString())
                                 .setFont(boldFont)
+                                .setFontSize(10)
                                 .setTextAlignment(TextAlignment.CENTER))
                         .setBackgroundColor(headerColor);
 
 
                 table.addCell(totalCalculatedValueCell);
                 table.addCell(totalChargedValueCell);
+                Cell emptyCell = new Cell() // Celda vacía para la última columna
+                        .setBackgroundColor(headerColor); // Sin contenido, solo el fondo
+                table.addCell(emptyCell);
 
                 document.add(table);
             }

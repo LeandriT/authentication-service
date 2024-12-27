@@ -1,6 +1,8 @@
 package com.seek.authentication_service.dto.response;
 
+import com.seek.authentication_service.model.enums.ParkingStatus;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +19,11 @@ public class VehicleTransactionLineDto {
     private String plate;
     private String fullName;
     private String phoneNumber;
-    private int vehicleQty;
     private BigDecimal amountCalculated;
     private BigDecimal amountCharged;
     private Long parkedTime;
+    private LocalDateTime parkingDate;
+    private LocalDateTime paymentDate;
+    private ParkingStatus parkingStatus;
 
 }
