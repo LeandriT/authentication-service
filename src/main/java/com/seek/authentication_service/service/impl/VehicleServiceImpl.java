@@ -230,10 +230,6 @@ public class VehicleServiceImpl implements VehicleService {
         dailyTransactionSummaryDto.setTotalCharged(totalCharged);
         dailyTransactionSummaryDto.setTotals(lines);
 
-        log.info("Contenido del DTO: {}", dailyTransactionSummaryDto);
-        log.info("Totales Calculados: {}", dailyTransactionSummaryDto.getTotalCalculated());
-        log.info("Totales Cargados: {}", dailyTransactionSummaryDto.getTotalCharged());
-        log.info("Líneas de Transacción: {}", dailyTransactionSummaryDto.getTotals());
         return pdfFileGenerator.totalToDay(dailyTransactionSummaryDto);
     }
 
