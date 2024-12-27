@@ -21,7 +21,6 @@ import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.repository.VehicleRepository;
 import com.seek.authentication_service.service.PdfFileGenerator;
 import com.seek.authentication_service.service.VehicleService;
-import com.seek.authentication_service.util.TimeElapsedCalculator;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -53,7 +52,6 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
-        LocalDateTime start = LocalDateTime.now();
         log.info("START REGISTRANDO VEHICULO: {}", vehicleRequest.getPlate());
         boolean exist = repository.existsByPlateAndParkingDateAndUserUuid(vehicleRequest.getPlate(), LocalDate.now(),
                 vehicleRequest.getUserUuid(), ParkingStatus.PARKED);
@@ -73,12 +71,8 @@ public class VehicleServiceImpl implements VehicleService {
         vehicle.setRate(user.getRate());
         this.assignLocation(vehicle, user);
         vehicle = repository.save(vehicle);
-        VehicleResponse dto = mapper.toDto(vehicle);
-        LocalDateTime end = LocalDateTime.now();
-        String elapsedTime = TimeElapsedCalculator.getElapsedTime(start, end);
         log.info("END REGISTRANDO VEHICULO: {}", vehicleRequest.getPlate());
-        log.info("TIEMPO TRANSCURRIDO: {}", elapsedTime);
-        return dto;
+        return  mapper.toDto(vehicle);
     }
 
     @Override
