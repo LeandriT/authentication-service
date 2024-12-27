@@ -5,8 +5,10 @@ import com.seek.authentication_service.client.dto.VehicleInfoDto;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
+import com.seek.authentication_service.dto.response.DailyTransactionSummaryDto;
 import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
+import com.seek.authentication_service.dto.response.VehicleTransactionLineDto;
 import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.exceptions.VehicleNotFoundException;
@@ -17,6 +19,7 @@ import com.seek.authentication_service.model.Vehicle;
 import com.seek.authentication_service.model.enums.ParkingStatus;
 import com.seek.authentication_service.repository.UserRepository;
 import com.seek.authentication_service.repository.VehicleRepository;
+import com.seek.authentication_service.service.PdfFileGenerator;
 import com.seek.authentication_service.service.VehicleService;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import java.math.BigDecimal;
@@ -24,9 +27,14 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -42,6 +50,7 @@ public class VehicleServiceImpl implements VehicleService {
     private final UserRepository userRepository;
     private final VehicleMapper mapper;
     private final VehicleSearchService vehicleSearchService;
+    private final PdfFileGenerator pdfFileGenerator;
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
@@ -164,6 +173,87 @@ public class VehicleServiceImpl implements VehicleService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
         dashboardResponse.setTotalMoneyFromPaidVehicles(totalMoneyFromPaidVehicles);
         return dashboardResponse;
+    }
+
+    @Override
+    public byte[] generateTotalSummaryToday(UUID userUuid, LocalDate date) {
+        log.info("Generando PDF para userUuid: {} y date: {}", userUuid, date);
+
+        User user = userRepository.findById(userUuid).orElseThrow(UserNotFoundException::new);
+        String location = user.getLocation().getParentLocation().getName() + " - " + user.getLocation().getName();
+        DailyTransactionSummaryDto dailyTransactionSummaryDto = DailyTransactionSummaryDto.builder()
+                .user(user.getFullName())
+                .rate(user.getRate())
+                .location(location)
+                .date(date)
+                .build();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        String search =
+                String.format("user.uuid==%s;parkingDate>='%s';parkingDate<='%s'", userUuid, startOfDay, endOfDay);
+        log.info("Consulta RSQL generada: {}", search);
+        Specification<Vehicle> spec = RSQLJPASupport.toSpecification(search);
+        List<Vehicle> vehicleList = repository.findAll(spec);
+        vehicleList.stream().filter(item -> item.getParkingStatus().equals(ParkingStatus.PARKED))
+                .forEach(this::calculateParkingStatus);
+        // Variables para totales
+        BigDecimal totalCalculated = BigDecimal.ZERO;
+        BigDecimal totalCharged = BigDecimal.ZERO;
+
+        // Crear el conjunto de líneas de transacciones
+        Map<String, List<Vehicle>> groupedVehicles = vehicleList.stream()
+                .collect(Collectors.groupingBy(Vehicle::getPlate));
+
+        // Crear el conjunto de líneas de transacciones
+        Set<VehicleTransactionLineDto> lines = new HashSet<>();
+
+        // Procesar cada grupo de vehículos
+        for (Map.Entry<String, List<Vehicle>> entry : groupedVehicles.entrySet()) {
+            String plate = entry.getKey();
+            List<Vehicle> vehicles = entry.getValue();
+
+            // Calcular totales por placa
+            int vehicleQty = vehicles.size();
+            BigDecimal plateTotalCalculated = vehicles.stream()
+                    .map(Vehicle::getAmountCalculated)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal plateTotalCharged = vehicles.stream()
+                    .map(Vehicle::getAmountCharged)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            Long parkedTime = vehicles.stream()
+                    .map(Vehicle::getParkedTime)
+                    .reduce(0l, Long::sum);
+
+            // Crear el DTO de línea
+            VehicleTransactionLineDto line = VehicleTransactionLineDto.builder()
+                    .plate(plate)
+                    .fullName(vehicles.get(0).getFullName()) // Tomamos el nombre del primer registro
+                    .phoneNumber(vehicles.get(0).getPhoneNumber()) // Tomamos el teléfono del primer registro
+                    .vehicleQty(vehicleQty)
+                    .amountCalculated(plateTotalCalculated)
+                    .amountCharged(plateTotalCharged)
+                    .parkedTime(parkedTime)
+                    .build();
+
+            // Agregar al conjunto de líneas
+            lines.add(line);
+
+            // Acumular los totales generales
+            totalCalculated = totalCalculated.add(plateTotalCalculated);
+            totalCharged = totalCharged.add(plateTotalCharged);
+        }
+
+        // Configurar los totales en el DTO principal
+        dailyTransactionSummaryDto.setTotalCalculated(totalCalculated);
+        dailyTransactionSummaryDto.setTotalCharged(totalCharged);
+        dailyTransactionSummaryDto.setTotals(lines);
+
+        log.info("Contenido del DTO: {}", dailyTransactionSummaryDto);
+        log.info("Totales Calculados: {}", dailyTransactionSummaryDto.getTotalCalculated());
+        log.info("Totales Cargados: {}", dailyTransactionSummaryDto.getTotalCharged());
+        log.info("Líneas de Transacción: {}", dailyTransactionSummaryDto.getTotals());
+        return pdfFileGenerator.totalToDay(dailyTransactionSummaryDto);
     }
 
     private BigDecimal estimateTotal(BigDecimal totalCharged, LocalDateTime startDare, LocalDateTime endDate) {

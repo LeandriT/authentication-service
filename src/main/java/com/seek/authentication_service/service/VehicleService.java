@@ -5,6 +5,7 @@ import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
 import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -25,4 +26,6 @@ public interface VehicleService {
     List<VehicleResponse> showByPlate(SearchVehicleRequest searchVehicleRequest);
 
     DashboardResponse dashboard(UUID userUuid);
+
+    byte[] generateTotalSummaryToday(UUID userUuid, LocalDate date);
 }

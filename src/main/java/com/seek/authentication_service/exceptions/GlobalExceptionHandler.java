@@ -57,11 +57,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); // Cambiar a 409 Conflict
     }
 
+    @ExceptionHandler(UserPreferencesNotFoundException.class)
+    public ResponseEntity<ErrorMessage> handleUserPreferencesNotFoundException(UserPreferencesNotFoundException ex) {
+        ErrorMessage errorResponse = new ErrorMessage();
+        errorResponse.setMessage(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND); // Cambiar a 409 Conflict
+    }
+
+    @ExceptionHandler(RecordAlreadyExistsException.class)
+    public ResponseEntity<ErrorMessage> handleEntityAlreadyExistsException(RecordAlreadyExistsException ex) {
+        ErrorMessage errorResponse = new ErrorMessage();
+        errorResponse.setMessage(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FOUND); // Cambiar a 409 Conflict
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);

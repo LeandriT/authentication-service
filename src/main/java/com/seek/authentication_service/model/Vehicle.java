@@ -56,7 +56,7 @@ public class Vehicle extends BaseModel {
 
     @Builder.Default()
     @Column(name = "parked_time")
-    private Long parkedTime = 0L; // Almacena el tiempo en milisegundos
+    private Long parkedTime = 0L; // Almacena el tiempo en minutos
     @Builder.Default()
     @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)

@@ -16,7 +16,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface VehicleRepository extends JpaRepository<Vehicle, UUID> , JpaSpecificationExecutor<Vehicle> {
+public interface VehicleRepository extends JpaRepository<Vehicle, UUID>, JpaSpecificationExecutor<Vehicle> {
     @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END " +
             "FROM Vehicle v " +
             "WHERE v.plate = :plate " +
@@ -108,4 +108,5 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> , JpaSpe
             @Param("endOfDay") LocalDateTime endOfDay,
             @Param("parkingStatus") ParkingStatus parkingStatus
     );
+
 }
