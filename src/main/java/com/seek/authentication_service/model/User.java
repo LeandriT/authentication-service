@@ -66,6 +66,14 @@ public class User extends BaseModel implements UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
 
+    @Column(name = "latitude", nullable = false, precision = 9, scale = 6)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", nullable = false, precision = 9, scale = 6)
+    private BigDecimal longitude;
+
+
+
     public String getFullName() {
         return fullName;
     }

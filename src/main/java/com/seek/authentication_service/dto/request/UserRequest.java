@@ -41,6 +41,9 @@ public class UserRequest implements Serializable {
 
     @NotEmpty(message = "location no puede ser vacio")
     private UUID locationUuid;
-
+    @NotNull(message = "Campo Latitud requerido")
+    private BigDecimal latitude;
+    @NotNull(message = "Campo Longitud requerido")
+    private BigDecimal longitude;
 
 }

@@ -24,4 +24,6 @@ public class UserResponse extends BaseDto {
     private Role role;
     private BigDecimal rate;
     private LocationResponse location;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 }
