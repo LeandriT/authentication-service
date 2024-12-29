@@ -73,6 +73,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts
                 .builder()
                 .claim("uuid", user.getUuid())
+                .claim("full_name", user.getFullName())
                 .subject(user.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTimeInMillis)) //24 horas

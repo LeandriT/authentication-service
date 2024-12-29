@@ -1,6 +1,6 @@
 CREATE TABLE tokens (
     uuid UUID PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
+    token VARCHAR(1000) NOT NULL,
     is_logged_out BOOLEAN NOT NULL,
     user_uuid UUID,
     is_deleted BOOLEAN DEFAULT FALSE, -- Indica si el registro ha sido eliminado (soft delete), por defecto es FALSE
