@@ -2,7 +2,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-
+    username: pass
+    password: pass
     properties:
       mail:
         smtp:
@@ -18,9 +19,14 @@ spring:
     name: authentication-service
   jackson:
     property-naming-strategy: SNAKE_CASE
+    time-zone: America/Guayaquil
   datasource:
-
+    url: jdbc:postgresql://localhost:5432/authentication-service
+    username: postgres
+    password: postgres
     hikari:
+      data-source-properties:
+        serverTimezone: America/Guayaquil
       maximum-pool-size: 100
       minimum-idle: 10
       idle-timeout: 30000
@@ -38,6 +44,7 @@ spring:
         format_sql: true
         show_sql: false
         jdbc:
+          time_zone: UTC
           batch_size: 50
           fetch_size: 50
 
@@ -54,6 +61,6 @@ server:
     include-message: always
 app:
   secret:
-    key: w4Gx5_1JH-34xO1vF9ZwLgMphO1ANzTG3hWpBBfyOjo=
+    key: pass
   time:
     extra: 31 #dias
