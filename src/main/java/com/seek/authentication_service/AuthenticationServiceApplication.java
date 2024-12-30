@@ -1,5 +1,6 @@
 package com.seek.authentication_service;
 
+import java.util.TimeZone;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +13,7 @@ public class AuthenticationServiceApplication {
 
     public static void main(String[] args) {
         log.info("Starting application init");
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Guayaquil"));
         SpringApplication.run(AuthenticationServiceApplication.class, args);
         log.info("Starting application end");
     }
