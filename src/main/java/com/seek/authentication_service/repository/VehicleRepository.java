@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +44,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID>, JpaSpec
             @Param("parkingStatus") ParkingStatus parkingStatus
     );
 
+    Optional<Vehicle> findFirstByPlateAndFullNameIsNotNullOrderByCreatedAtDesc(String plate);
 
     @Query("SELECT v FROM Vehicle v WHERE " +
             "(:search IS NULL OR UPPER(v.plate) LIKE CONCAT('%', UPPER(:search), '%'))")
