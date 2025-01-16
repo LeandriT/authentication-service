@@ -1,7 +1,6 @@
 package com.seek.authentication_service.service.impl;
 
 import com.seek.authentication_service.client.VehicleSearchService;
-import com.seek.authentication_service.client.dto.VehicleInfoDto;
 import com.seek.authentication_service.dto.request.SearchVehicleRequest;
 import com.seek.authentication_service.dto.request.VehiclePaidRequest;
 import com.seek.authentication_service.dto.request.VehicleRequest;
@@ -9,7 +8,7 @@ import com.seek.authentication_service.dto.response.DailyTransactionSummaryDto;
 import com.seek.authentication_service.dto.response.DashboardResponse;
 import com.seek.authentication_service.dto.response.VehicleResponse;
 import com.seek.authentication_service.dto.response.VehicleTransactionLineDto;
-import com.seek.authentication_service.dto.response.infoVehicle.VehicleInfoV2Dto;
+import com.seek.authentication_service.event.dto.CustomEvent;
 import com.seek.authentication_service.exceptions.GenericException;
 import com.seek.authentication_service.exceptions.UserNotFoundException;
 import com.seek.authentication_service.exceptions.VehicleNotFoundException;
@@ -31,12 +30,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -52,6 +49,7 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleMapper mapper;
     private final VehicleSearchService vehicleSearchService;
     private final PdfFileGenerator pdfFileGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public VehicleResponse create(VehicleRequest vehicleRequest) {
@@ -68,12 +66,12 @@ public class VehicleServiceImpl implements VehicleService {
                     vehicleRequest.getPlate()));
         }
         Vehicle vehicle = mapper.toModel(vehicleRequest);
-        this.assignExtraInfoVehicle(vehicleRequest.getPlate(), vehicle);
         User user = userRepository.findById(vehicleRequest.getUserUuid()).orElseThrow(UserNotFoundException::new);
         vehicle.setUser(user);
         vehicle.setRate(user.getRate());
         this.assignLocation(vehicle, user);
-        vehicle = repository.save(vehicle);
+        vehicle = repository.saveAndFlush(vehicle);
+        eventPublisher.publishEvent(CustomEvent.builder().action("UPDATE").uuid(vehicle.getUuid()).build());
         log.info("END REGISTRANDO VEHICULO: {}", vehicleRequest.getPlate());
         return mapper.toDto(vehicle);
     }
@@ -274,70 +272,6 @@ public class VehicleServiceImpl implements VehicleService {
         vehicle.setRate(rate);
     }
 
-    void assignExtraInfoVehicle(String plate, Vehicle vehicle) {
-
-        if (Objects.nonNull(plate) && !plate.isEmpty()) {
-            Optional<Vehicle> found = repository.findFirstByPlateAndFullNameIsNotNullOrderByCreatedAtDesc(plate);
-            if (found.isEmpty()) {
-                boolean validEcuadorianPlate = isValidEcuadorianPlate(plate);
-                log.info("Es una placa valida: {}", validEcuadorianPlate);
-                if (validEcuadorianPlate) {
-                    log.info("Consultando datos placa a SRI: {}", plate);
-                    try {
-                        VehicleInfoV2Dto vehicleInfoDto = vehicleSearchService.searchVehicleV2(plate.replace("-", ""));
-                        if (Objects.nonNull(vehicleInfoDto)) {
-                            vehicle.setBrand(vehicleInfoDto.getBrand());
-                            vehicle.setModel(vehicleInfoDto.getModel());
-                            vehicle.setModelYear(String.valueOf(vehicleInfoDto.getYear()));
-                            vehicle.setManufacturingCountry(vehicleInfoDto.getCountry());
-                            vehicle.setFullName(vehicleInfoDto.getFullName());
-                            vehicle.setDni(vehicleInfoDto.getDni());
-                        }
-                    } catch (Exception ex) {
-                        log.info("Se ha producido un error al obtener registros adicionales placa");
-                        VehicleInfoDto vehicleInfoDto = vehicleSearchService.searchVehicle(plate.replace("-", ""));
-                        if (Objects.nonNull(vehicleInfoDto)) {
-                            vehicle.setBrand(vehicleInfoDto.getMarca());
-                            vehicle.setModel(vehicleInfoDto.getModelo());
-                            vehicle.setModelYear(String.valueOf(vehicleInfoDto.getAnioModelo()));
-                            vehicle.setManufacturingCountry(vehicleInfoDto.getPaisFabricacion());
-                        } else {
-                            log.info("Asignando valores default");
-                            vehicle.setBrand("NA");
-                            vehicle.setModel("NA");
-                            vehicle.setModelYear("NA");
-                            vehicle.setManufacturingCountry("NA");
-                            vehicle.setFullName("NA");
-                            vehicle.setDni("NA");
-                        }
-                    }
-                }
-            } else {
-                Vehicle vehicleFounded = found.get();
-                vehicle.setBrand(vehicleFounded.getBrand());
-                vehicle.setModel(vehicleFounded.getModel());
-                vehicle.setModelYear(vehicle.getModelYear());
-                vehicle.setManufacturingCountry(vehicle.getManufacturingCountry());
-                vehicle.setFullName(vehicleFounded.getFullName());
-                vehicle.setDni(vehicle.getDni());
-            }
-
-        }
-    }
-
-    boolean isValidEcuadorianPlate(String plate) {
-        if (plate == null || plate.isEmpty()) {
-            return false;
-        }
-
-        // Patrón para placas de vehículos particulares: ABC-1234
-        String vehiclePlatePattern = "^[A-Z]{3}-\\d{3,4}$";
-        // Patrón para placas de motocicletas: AB-123A
-        String motorcyclePlatePattern = "^[A-Z]{2}-\\d{3}[A-Z]$";
-
-        // Validar contra los patrones
-        return Pattern.matches(vehiclePlatePattern, plate) || Pattern.matches(motorcyclePlatePattern, plate);
-    }
 
     void assignLocation(Vehicle vehicle, User user) {
         Location location = user.getLocation();

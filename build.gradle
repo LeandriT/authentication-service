@@ -49,8 +49,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop
     implementation 'org.springframework.boot:spring-boot-starter-aop:3.4.1'
 
-    implementation 'com.microsoft.playwright:playwright:1.40.0'
+//    implementation 'com.microsoft.playwright:playwright:1.40.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+
 }
 
 tasks.named('test') {
