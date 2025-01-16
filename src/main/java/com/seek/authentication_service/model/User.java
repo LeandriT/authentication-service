@@ -73,7 +73,6 @@ public class User extends BaseModel implements UserDetails {
     private BigDecimal longitude;
 
 
-
     public String getFullName() {
         return fullName;
     }

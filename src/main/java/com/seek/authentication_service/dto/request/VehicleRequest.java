@@ -19,7 +19,6 @@ public class VehicleRequest {
     private String plate;
     private String dni;
     private String fullName;
-    @NotEmpty(message = "numero celular requerido")
     private String phoneNumber;
     private String secondaryPhoneNumber;
     private Long parkedTime;
