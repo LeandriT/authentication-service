@@ -26,4 +26,6 @@ public class UserResponse extends BaseDto {
     private LocationResponse location;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private String parkingName;
+    private Integer totalSlots;
 }

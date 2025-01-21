@@ -46,4 +46,8 @@ public class UserRequest implements Serializable {
     @NotNull(message = "Campo Longitud requerido")
     private BigDecimal longitude;
 
+    @NotEmpty(message = "parkingName not be null")
+    private String parkingName;
+    @NotNull(message = "totalSlots not be null")
+    private Integer totalSlots;
 }

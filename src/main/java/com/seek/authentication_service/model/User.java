@@ -42,6 +42,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 @NoArgsConstructor
 public class User extends BaseModel implements UserDetails {
     @NotNull
+    private String parkingName;
+    @NotNull
+    private Integer totalSlots;
+    @NotNull
     private String username;
     @NotNull
     private String fullName;

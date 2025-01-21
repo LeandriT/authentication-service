@@ -135,6 +135,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userFound.setRate(request.getRate());
         userFound.setBirthDay(request.getBirthDay());
         userFound.setPassword(password);
+        userFound.setParkingName(request.getParkingName());
+        userFound.setTotalSlots(request.getTotalSlots());
         Location location = locationRepository.findById(request.getLocationUuid())
                 .orElseThrow(() -> new LocationNotFoundException("Ciudad no encontrada"));
         userFound.setLocation(location);

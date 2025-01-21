@@ -43,4 +43,9 @@ public class UserUpdateRequest implements Serializable {
 
     @NotNull(message = "La ubicación no puede ser vacía")
     private UUID locationUuid;
+
+    @NotEmpty(message = "parkingName not be null")
+    private String parkingName;
+    @NotNull(message = "totalSlots not be null")
+    private Integer totalSlots;
 }
